@@ -4,7 +4,6 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-tox = ">=3.14"
 molecule = ">=3.0"
 flake8 = ">=3.7"
 pylint = ">=2.4"

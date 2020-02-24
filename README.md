@@ -49,9 +49,7 @@ molecule test -s test-local
 
 ## Building & running the operator outside of a cluster
 
-Before running the operator, Kubernetes needs to know about the new custom resource definition the operator will be watching.
-
-Deploy the CRD:
+Although we are not going to run as a pod inside the cluster, before running the operator, Kubernetes needs to know about the new custom resource definition the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
 
 ```
 kubectl create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
@@ -71,3 +69,5 @@ Finally, run the operator locally:
 ```
 operator-sdk run --local
 ```
+
+You will see some info level logs.
