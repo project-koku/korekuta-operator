@@ -1,6 +1,6 @@
 sudo: required
 services: docker
-language: python
+language: go
 install:
   - pip3 install docker molecule openshift jmespath
 script:

@@ -1,15 +1,15 @@
 # korekuta-operator
 
 ## About
-Operator to obtain OCP usage data and upload it to masu. The data collector tool utilizes [ansible](https://www.ansible.com/) to collect usage data from an OCP cluster installation.
+Operator to obtain OCP usage data and upload it to masu. The operator utilizes [ansible](https://www.ansible.com/) to collect usage data from an OCP cluster installation.
 
 You must have access to a Kubernetes v.1.9.0+ cluster.
 
 ## Development
 
-This project was generated using Operator SDK. For a more in depth understanding of the structure of this repo, see the [user guide](https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md).
+This project was generated using Operator SDK. For a more in depth understanding of the structure of this repo, see the [user guide](https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md) that was used to generate it.
 
-This is a go project and requires a go version of 1.13+. To get started developing against `korekuta-operator` first clone a local copy of the git repository.
+This is a go project and requires a go version of `1.13+`. To get started developing against `korekuta-operator` first clone a local copy of the git repository.
 
 ```
 git clone https://github.com/project-koku/korekuta-operator.git
@@ -41,15 +41,13 @@ pipenv shell
 
 We utilize [molecule](https://molecule.readthedocs.io/en/latest/) to test the ansible roles.
 
-Change directory to the role to be tested and run molecule (example below with setup role):
-
 ```
 molecule test -s test-local
 ```
 
 ## Building & running the operator outside of a cluster
 
-Although we are not going to run as a pod inside the cluster, before running the operator, Kubernetes needs to know about the new custom resource definition the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
+Although we are not going to run as a pod inside the cluster, Kubernetes needs to know about the new custom resource definition the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
 
 ```
 kubectl create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
