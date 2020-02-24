@@ -6,9 +6,8 @@ driver:
   options:
     managed: False
     ansible_connection_options: {}
-lint:
-  name: yamllint
-  enabled: False
+lint: |
+  yamllint .
 platforms:
 - name: test-cluster
   groups:

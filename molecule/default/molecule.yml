@@ -3,9 +3,8 @@ dependency:
   name: galaxy
 driver:
   name: docker
-lint:
-  name: yamllint
-  enabled: False
+lint: |
+  yamllint .
 platforms:
 - name: kind-default
   groups:

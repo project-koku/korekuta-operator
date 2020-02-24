@@ -4,8 +4,16 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+tox = ">=3.14"
+molecule = ">=3.0"
+flake8 = ">=3.7"
+pylint = ">=2.4"
+pyyaml = ">=5.3"
 
 [packages]
+ansible = ">=2.7"
+ansible-runner = ">=1.4.4"
+ansible-runner-http = ">=1.0.0"
 
 [requires]
-python_version = "3.6"
+go = ">=1.13.8"
