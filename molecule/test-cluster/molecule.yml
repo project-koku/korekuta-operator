@@ -4,14 +4,14 @@ dependency:
 driver:
   name: delegated
   options:
-    managed: False
+    managed: false
     ansible_connection_options: {}
 lint: |
   yamllint .
 platforms:
-- name: test-cluster
-  groups:
-  - k8s
+  - name: test-cluster
+    groups:
+      - k8s
 provisioner:
   name: ansible
   inventory:
@@ -20,7 +20,7 @@ provisioner:
         namespace: ${TEST_NAMESPACE:-osdk-test}
   lint:
     name: ansible-lint
-    enabled: False
+    enabled: false
   env:
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/roles
 scenario:
