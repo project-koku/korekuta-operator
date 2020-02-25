@@ -4,7 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-molecule = ">=3.0"
+tox = ">=3.14"
+molecule = {extras = ["docker"],version = ">=3.0"}
 flake8 = ">=3.7"
 pylint = ">=2.4"
 pyyaml = ">=5.3"

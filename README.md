@@ -1,9 +1,9 @@
 # korekuta-operator
 
 ## About
-Operator to obtain OCP usage data and upload it to masu. The operator utilizes [ansible](https://www.ansible.com/) to collect usage data from an OCP cluster installation.
+Operator to obtain OCP usage data and upload it to koku. The operator utilizes [ansible](https://www.ansible.com/) to collect usage data from an OCP cluster installation.
 
-You must have access to a Kubernetes v.1.9.0+ cluster.
+You must have access to an OpenShift v.4.3.0+ cluster..
 
 ## Development
 
@@ -37,6 +37,8 @@ To activate the virtual environment run
 pipenv shell
 ```
 
+Finally, install the Operator SDK CLI using the following [documentation](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md).
+
 ## Testing
 
 We utilize [molecule](https://molecule.readthedocs.io/en/latest/) to test the ansible roles.
@@ -47,10 +49,10 @@ molecule test -s test-local
 
 ## Building & running the operator outside of a cluster
 
-Although we are not going to run as a pod inside the cluster, Kubernetes needs to know about the new custom resource definition the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
+Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definition the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
 
 ```
-kubectl create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
+oc create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
 ```
 
 Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the memcached role in the current repository:
@@ -65,7 +67,7 @@ Next, since we are running locally, we need to make sure that the path to the ro
 Finally, run the operator locally:
 
 ```
-operator-sdk run --local
+make test-local
 ```
 
 You will see some info level logs.
