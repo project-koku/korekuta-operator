@@ -1,7 +1,7 @@
 # korekuta-operator
 
 ## About
-Operator to obtain OCP usage data and upload it to masu. The operator utilizes [ansible](https://www.ansible.com/) to collect usage data from an OCP cluster installation.
+Operator to obtain OCP usage data and upload it to koku. The operator utilizes [ansible](https://www.ansible.com/) to collect usage data from an OCP cluster installation.
 
 You must have access to a Kubernetes v.1.9.0+ cluster.
 
