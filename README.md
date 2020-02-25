@@ -9,7 +9,7 @@ You must have access to a Kubernetes v.1.9.0+ cluster.
 
 This project was generated using Operator SDK. For a more in depth understanding of the structure of this repo, see the [user guide](https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md) that was used to generate it.
 
-This is a go project and requires a go version of `1.13+`. To get started developing against `korekuta-operator` first clone a local copy of the git repository.
+This project requires Python 3.6 or greater and Go 1.13 or greater if you plan on running the operator locally. To get started developing against `korekuta-operator` first clone a local copy of the git repository.
 
 ```
 git clone https://github.com/project-koku/korekuta-operator.git
