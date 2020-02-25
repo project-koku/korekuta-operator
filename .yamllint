@@ -1,0 +1,9 @@
+---
+extends: default
+
+# For all rules
+ignore: |
+  .tox/
+
+rules:
+  truthy: disable

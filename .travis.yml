@@ -1,7 +1,13 @@
+---
 sudo: required
 services: docker
 language: python
+python:
+  - "3.6"
+cache: pip
+before_install:
+  - sudo apt-get -qq update
 install:
-  - pip3 install docker molecule openshift jmespath
+  - pip install tox
 script:
-  - molecule test -s test-local
+  - tox
