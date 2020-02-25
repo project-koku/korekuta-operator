@@ -44,7 +44,7 @@ Finally, install the Operator SDK CLI using the following [documentation](https:
 We utilize [molecule](https://molecule.readthedocs.io/en/latest/) to test the ansible roles.
 
 ```
-molecule test -s test-local
+make test-local
 ```
 
 ## Building & running the operator outside of a cluster
@@ -67,7 +67,7 @@ Next, since we are running locally, we need to make sure that the path to the ro
 Finally, run the operator locally:
 
 ```
-make test-local
+operator-sdk run --local
 ```
 
 You will see some info level logs.
