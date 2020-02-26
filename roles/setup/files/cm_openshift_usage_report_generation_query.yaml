@@ -73,7 +73,7 @@ spec:
     - default: pod-cpu-request-raw
       name: KubeCPURequestRawDataSourceName
       type: ReportDataSource
-    - default: pod-cpu-limit-raw
+    - default: cm-pod-cpu-limit-raw
       name: KubeCPULimitRawDataSourceName
       type: ReportDataSource
     - default: pod-memory-usage-raw
@@ -82,7 +82,7 @@ spec:
     - default: pod-memory-request-raw
       name: KubeMemoryRequestRawDataSourceName
       type: ReportDataSource
-    - default: pod-memory-limit-raw
+    - default: cm-pod-memory-limit-raw
       name: KubeMemoryLimitRawDataSourceName
       type: ReportDataSource
     - default: node-cpu-capacity-raw
@@ -91,7 +91,7 @@ spec:
     - default: node-memory-capacity-raw
       name: NodeMemoryCapacityRawDataSourceName
       type: ReportDataSource
-    - default: pod-labels-raw
+    - default: cm-pod-labels-raw
       name: PodLabelsRawDataSourceName
       type: ReportDataSource
   query: |

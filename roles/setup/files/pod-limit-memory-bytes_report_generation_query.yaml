@@ -4,7 +4,7 @@ kind: ReportQuery
 metadata:
   labels:
     cost-management: "true"
-  name: pod-memory-limit-raw
+  name: cm-pod-memory-limit-raw
 spec:
   columns:
     - name: pod

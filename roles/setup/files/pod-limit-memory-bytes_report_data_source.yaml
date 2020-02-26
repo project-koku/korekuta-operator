@@ -4,7 +4,7 @@ kind: ReportDataSource
 metadata:
   labels:
     cost-management: "true"
-  name: pod-memory-limit-raw
+  name: cm-pod-memory-limit-raw
 spec:
   reportQueryView:
-    queryName: pod-memory-limit-raw
+    queryName: cm-pod-memory-limit-raw

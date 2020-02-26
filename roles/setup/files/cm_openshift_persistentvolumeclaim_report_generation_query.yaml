@@ -64,13 +64,13 @@ spec:
     - default: persistentvolumeclaim-usage-raw
       name: PersistentVolumeClaimUsageRawDataSourceName
       type: ReportDataSource
-    - default: persistentvolume-labels-raw
+    - default: cm-persistentvolume-labels-raw
       name: PersistentVolumeLabelsRawDataSourceName
       type: ReportDataSource
-    - default: persistentvolumeclaim-labels-raw
+    - default: cm-persistentvolumeclaim-labels-raw
       name: PersistentVolumeClaimLabelsRawDataSourceName
       type: ReportDataSource
-    - default: pod-persistentvolumeclaim-info-raw
+    - default: cm-pod-persistentvolumeclaim-info-raw
       name: PodPersistentVolumeClaimInfoRawDataSourceName
       type: ReportDataSource
   query: |

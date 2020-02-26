@@ -4,7 +4,7 @@ kind: ReportQuery
 metadata:
   labels:
     cost-management: "true"
-  name: pod-labels-raw
+  name: cm-pod-labels-raw
 spec:
   columns:
     - name: pod
@@ -21,7 +21,7 @@ spec:
     - name: dt
       type: varchar
   inputs:
-    - default: kube-pod-labels
+    - default: cm-kube-pod-labels
       name: KubePodLabelsDataSourceName
       type: ReportDataSource
   query: |
