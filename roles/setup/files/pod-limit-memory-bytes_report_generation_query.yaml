@@ -1,0 +1,51 @@
+---
+apiVersion: metering.openshift.io/v1alpha1
+kind: ReportQuery
+metadata:
+  labels:
+    cost-management: "true"
+  name: pod-memory-limit-raw
+spec:
+  columns:
+    - name: pod
+      type: varchar
+      unit: kubernetes_pod
+    - name: namespace
+      type: varchar
+      unit: kubernetes_namespace
+    - name: node
+      type: varchar
+      unit: kubernetes_node
+    - name: labels
+      tableHidden: true
+      type: map<varchar, varchar>
+    - name: pod_limit_memory_bytes
+      type: double
+      unit: bytes
+    - name: timeprecision
+      type: double
+      unit: seconds
+    - name: pod_limit_memory_byte_seconds
+      type: double
+      unit: byte_seconds
+    - name: timestamp
+      type: timestamp
+      unit: date
+    - name: dt
+      type: varchar
+  inputs:
+    - default: pod-limit-memory-bytes
+      name: PodLimitMemoryBytesDataSourceName
+      type: ReportDataSource
+  query: |
+    SELECT labels['pod'] as pod,
+        labels['namespace'] as namespace,
+        element_at(labels, 'node') as node,
+        labels,
+        amount as pod_limit_memory_bytes,
+        timeprecision,
+        amount * timeprecision as pod_limit_memory_byte_seconds,
+        "timestamp",
+        dt
+    FROM {| dataSourceTableName .Report.Inputs.PodLimitMemoryBytesDataSourceName |}
+    WHERE element_at(labels, 'node') IS NOT NULL

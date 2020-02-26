@@ -70,4 +70,20 @@ Finally, run the operator locally:
 operator-sdk run --local
 ```
 
-You will see some info level logs.
+You will see some info level logs about the operator starting up. In order to kick off the memcached role, we want to deploy a Memcached CR.
+Edit the `deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml` as follows:
+
+```
+apiVersion: "cache.example.com/v1alpha1"
+kind: "Memcached"
+metadata:
+  name: "example-memcached"
+spec:
+  size: 3
+```
+Now create a Memcached custom resource:
+
+```
+oc apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+```
+You should now see ansible log output.

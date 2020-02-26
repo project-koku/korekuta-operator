@@ -3,3 +3,9 @@
   group: cache.example.com
   kind: Memcached
   role: /opt/ansible/roles/memcached
+
+# initial setup steps
+- version: v1alpha1
+  group: korekuta.example.com
+  kind: Korekuta
+  role: /opt/ansible/roles/setup

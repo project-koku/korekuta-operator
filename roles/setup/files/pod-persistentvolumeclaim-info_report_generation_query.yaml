@@ -1,0 +1,39 @@
+---
+apiVersion: metering.openshift.io/v1alpha1
+kind: ReportQuery
+metadata:
+  labels:
+    cost-management: "true"
+  name: pod-persistentvolumeclaim-info-raw
+spec:
+  columns:
+    - name: pod
+      type: varchar
+      unit: kubernetes_pod
+    - name: persistentvolumeclaim
+      type: varchar
+      unit: kubernetes_persistentvolumeclaim
+    - name: namespace
+      type: varchar
+      unit: kubernetes_namespace
+    - name: labels
+      type: map<varchar, varchar>
+    - name: timestamp
+      type: timestamp
+      unit: date
+    - name: dt
+      type: varchar
+  inputs:
+    - default: kube-pod-persistentvolumeclaim-info
+      name: KubePodPersistentVolumeClaimInfoDataSourceName
+      type: ReportDataSource
+  query: |
+    SELECT labels['pod'] as pod,
+        labels['persistentvolumeclaim'] as persistentvolumeclaim,
+        labels['namespace'] as namespace,
+        labels,
+        "timestamp",
+        dt
+    FROM {| dataSourceTableName .Report.Inputs.KubePodPersistentVolumeClaimInfoDataSourceName |}
+    WHERE element_at(labels, 'persistentvolumeclaim') IS NOT NULL
+        AND element_at(labels, 'pod') IS NOT NULL

@@ -1,0 +1,12 @@
+---
+
+- name: Create datasources and reports
+  k8s:
+    namespace: "{{ namespace }}"
+    state: present
+    src: "{{ item }}"
+  with_fileglob:
+    - "files/kube*"
+    - "files/pod*"
+    - "files/cm*"
+    - "files/persistentvolume*"

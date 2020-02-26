@@ -1,0 +1,6 @@
+---
+
+apiVersion: korekuta.example.com/v1alpha1
+kind: Korekuta
+metadata:
+  name: korekuta-example

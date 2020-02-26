@@ -1,0 +1,11 @@
+---
+apiVersion: metering.openshift.io/v1alpha1
+kind: Report
+metadata:
+  labels:
+    cost-management: "true"
+  name: cm-openshift-persistentvolumeclaim
+spec:
+  query: cm-openshift-persistentvolumeclaim
+  schedule:
+    period: hourly
