@@ -68,7 +68,7 @@ Next, since we are running locally, we need to make sure that the path to the ro
 - version: v1alpha1
   group: korekuta.example.com
   kind: Korekuta
-  role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/
+  role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/setup
 ```
 
 Finally, run the operator locally:
