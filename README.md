@@ -49,6 +49,12 @@ make test-local
 
 ## Building & running the operator outside of a cluster
 
+Create a new OpenShift project called `testing-korekuta`:
+
+```
+oc new-project testing-korekuta
+```
+
 Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRDs:
 
 ```
@@ -78,33 +84,19 @@ operator-sdk run --local
 ```
 
 You will see some info level logs about the operator starting up. In order to kick off the memcached role, we want to deploy a Memcached CR.
-Edit the `deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml` as follows:
-
-```
-apiVersion: "cache.example.com/v1alpha1"
-kind: "Memcached"
-metadata:
-  name: "example-memcached"
-spec:
-  size: 3
-```
-Now create a Memcached custom resource:
 
 ```
 oc apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
 ```
 You should now see ansible log output from the memcached role.
 
-The setup role is going to create the files inside of `roles/setup/files` inside of the namespace defined inside of `roles/setup/defaults/main.yml`. The default is a namespace called `testing_korekuta`. If this namespace does not exist, create it using the following command:
 
-```
-oc new-project testing_korekuta
-```
+The setup role is going to create the files inside of `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `testing-korekuta`.
 
 To start the setup role, a Korekuta custom resource has to be present. Run the following to create a Korekuta CR:
 
 ```
-oc create -f korekuta_cr.yaml
+oc create -f deploy/crds/korekuta_cr.yaml
 ```
 
 You should now see the Ansible logs from the setup role.
@@ -117,3 +109,17 @@ When developing and debugging roles locally, it can be quicker to run via Ansibl
 ansible-playbook playbook.yml
 ```
 This should show you the same output as if the role was being ran inside of the Operator. Once you are satisfied with the output of your role, test it by running the Operator locally.
+
+
+## Cleaning up resources
+
+After testing, you can cleanup the resources using the following:
+
+```
+oc delete -f deploy/crds/cache.example.com_memcacheds_crd.yaml
+oc delete -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
+oc delete -f deploy/crds/korekuta_crd.yaml
+oc delete -f deploy/crds/korekuta_cr.yaml
+oc delete project testing-korekuta
+
+```
