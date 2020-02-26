@@ -49,19 +49,26 @@ make test-local
 
 ## Building & running the operator outside of a cluster
 
-Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definition the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
+Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRDs:
 
 ```
 oc create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
+oc create -f deploy/crds/korekuta_crd.yaml
 ```
 
-Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the memcached role in the current repository:
+Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the memcached role and the setup role in the current repository:
 
 ```
 - version: v1alpha1
   group: cache.example.com
   kind: Memcached
   role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/memcached
+
+# initial setup steps
+- version: v1alpha1
+  group: korekuta.example.com
+  kind: Korekuta
+  role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/
 ```
 
 Finally, run the operator locally:
@@ -86,4 +93,27 @@ Now create a Memcached custom resource:
 ```
 oc apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
 ```
-You should now see ansible log output.
+You should now see ansible log output from the memcached role.
+
+The setup role is going to create the files inside of `roles/setup/files` inside of the namespace defined inside of `roles/setup/defaults/main.yml`. The default is a namespace called `testing_korekuta`. If this namespace does not exist, create it using the following command:
+
+```
+oc new-project testing_korekuta
+```
+
+To start the setup role, a Korekuta custom resource has to be present. Run the following to create a Korekuta CR:
+
+```
+oc create -f korekuta_cr.yaml
+```
+
+You should now see the Ansible logs from the setup role.
+
+## Running Ansible locally for development
+
+When developing and debugging roles locally, it can be quicker to run via Ansible than through the Operator. At the top level directory, there is a `playbook.yml` file. It currently points to the setup role, but can be edited to point at any role. Use the following command to run the playbook:
+
+```
+ansible-playbook playbook.yml
+```
+This should show you the same output as if the role was being ran inside of the Operator. Once you are satisfied with the output of your role, test it by running the Operator locally.

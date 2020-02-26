@@ -7,3 +7,4 @@ ignore: |
 
 rules:
   truthy: disable
+  line-length: disable
