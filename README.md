@@ -55,21 +55,15 @@ Create a new OpenShift project called `testing-korekuta`:
 oc new-project testing-korekuta
 ```
 
-Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRDs:
+Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
 
 ```
-oc create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
 oc create -f deploy/crds/cost_mgmt_crd.yaml
 ```
 
-Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the memcached role and the setup role in the current repository:
+Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the setup role in the current repository:
 
 ```
-- version: v1alpha1
-  group: cache.example.com
-  kind: Memcached
-  role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/memcached
-
 # initial setup steps
 - version: v1alpha1
   group: cost-mgmt.openshift.io
@@ -83,15 +77,10 @@ Finally, run the operator locally:
 operator-sdk run --local
 ```
 
-You will see some info level logs about the operator starting up. In order to kick off the memcached role, we want to deploy a Memcached CR.
-
-```
-oc apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
-```
-You should now see ansible log output from the memcached role.
+You will see some info level logs about the operator starting up. The operator works by watching for a known resource and then triggering a role based off of the presence of that resource.
 
 
-The setup role is going to create the files inside of `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
+The setup role is going to create the reports defined in `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
 To start the setup role, a CostManagement custom resource has to be present. Run the following to create a CostManagement CR:
 
@@ -127,8 +116,6 @@ This should show you the same output as if the role was being ran inside of the 
 After testing, you can cleanup the resources using the following:
 
 ```
-oc delete -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
-oc delete -f deploy/crds/cache.example.com_memcacheds_crd.yaml
 oc delete -f deploy/crds/cost_mgmt_cr.yaml
 oc delete -f deploy/crds/cost_mgmt_crd.yaml
 oc delete project testing-korekuta

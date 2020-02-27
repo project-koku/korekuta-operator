@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: memcached-operator
+  name: cost-mgmt-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: memcached-operator
+      name: cost-mgmt-operator
   template:
     metadata:
       labels:
-        name: memcached-operator
+        name: cost-mgmt-operator
     spec:
-      serviceAccountName: memcached-operator
+      serviceAccountName: cost-mgmt-operator
       containers:
         - name: ansible
           command:
@@ -44,7 +44,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "memcached-operator"
+              value: "cost-mgmt-operator"
             - name: ANSIBLE_GATHERING
               value: explicit
       volumes:
