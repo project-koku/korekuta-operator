@@ -91,7 +91,7 @@ oc apply -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
 You should now see ansible log output from the memcached role.
 
 
-The setup role is going to create the files inside of `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `testing-korekuta`.
+The setup role is going to create the files inside of `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
 To start the setup role, a Korekuta custom resource has to be present. Run the following to create a Korekuta CR:
 
@@ -103,7 +103,18 @@ You should now see the Ansible logs from the setup role.
 
 ## Running Ansible locally for development
 
-When developing and debugging roles locally, it can be quicker to run via Ansible than through the Operator. At the top level directory, there is a `playbook.yml` file. It currently points to the setup role, but can be edited to point at any role. Use the following command to run the playbook:
+When developing and debugging roles locally, it can be quicker to run via Ansible than through the Operator.
+
+At the top level directory, create a `playbook.yml` file:
+
+```
+---
+- hosts: localhost
+  roles:
+    - setup
+```
+
+The above example points to the setup role but can be modified to point at any role. Use the following command to run the playbook:
 
 ```
 ansible-playbook playbook.yml
@@ -121,5 +132,4 @@ oc delete -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
 oc delete -f deploy/crds/korekuta_crd.yaml
 oc delete -f deploy/crds/korekuta_cr.yaml
 oc delete project testing-korekuta
-
 ```
