@@ -1,0 +1,11 @@
+---
+apiVersion: metering.openshift.io/v1alpha1
+kind: Report
+metadata:
+  labels:
+    cost-management: "true"
+  name: cm-openshift-node-labels
+spec:
+  query: cm-openshift-node-labels
+  schedule:
+    period: hourly

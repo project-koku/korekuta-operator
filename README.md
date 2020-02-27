@@ -59,7 +59,7 @@ Although we are not going to run as a pod inside the cluster, OpenShift needs to
 
 ```
 oc create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
-oc create -f deploy/crds/korekuta_crd.yaml
+oc create -f deploy/crds/cost_mgmt_crd.yaml
 ```
 
 Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the memcached role and the setup role in the current repository:
@@ -72,8 +72,8 @@ Next, since we are running locally, we need to make sure that the path to the ro
 
 # initial setup steps
 - version: v1alpha1
-  group: korekuta.example.com
-  kind: Korekuta
+  group: cost-mgmt.openshift.io
+  kind: CostManagement
   role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/setup
 ```
 
@@ -93,10 +93,10 @@ You should now see ansible log output from the memcached role.
 
 The setup role is going to create the files inside of `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
-To start the setup role, a Korekuta custom resource has to be present. Run the following to create a Korekuta CR:
+To start the setup role, a CostManagement custom resource has to be present. Run the following to create a CostManagement CR:
 
 ```
-oc create -f deploy/crds/korekuta_cr.yaml
+oc create -f deploy/crds/cost_mgmt_cr.yaml
 ```
 
 You should now see the Ansible logs from the setup role.
@@ -127,9 +127,9 @@ This should show you the same output as if the role was being ran inside of the 
 After testing, you can cleanup the resources using the following:
 
 ```
-oc delete -f deploy/crds/cache.example.com_memcacheds_crd.yaml
 oc delete -f deploy/crds/cache.example.com_v1alpha1_memcached_cr.yaml
-oc delete -f deploy/crds/korekuta_crd.yaml
-oc delete -f deploy/crds/korekuta_cr.yaml
+oc delete -f deploy/crds/cache.example.com_memcacheds_crd.yaml
+oc delete -f deploy/crds/cost_mgmt_cr.yaml
+oc delete -f deploy/crds/cost_mgmt_crd.yaml
 oc delete project testing-korekuta
 ```

@@ -6,6 +6,6 @@
 
 # initial setup steps
 - version: v1alpha1
-  group: korekuta.example.com
-  kind: Korekuta
+  group: cost-mgmt.openshift.io
+  kind: CostManagement
   role: /opt/ansible/roles/setup

@@ -2,14 +2,14 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: korekutas.korekuta.example.com
+  name: cost-mgmts.cost-mgmt.openshift.io
 spec:
-  group: korekuta.example.com
+  group: cost-mgmt.openshift.io
   names:
-    kind: Korekuta
-    listKind: KorekutaList
-    plural: korekutas
-    singular: korekutas
+    kind: CostManagement
+    listKind: CostManagementList
+    plural: cost-mgmts
+    singular: cost-mgmt
   scope: Namespaced
   subresources:
     status: {}
