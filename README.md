@@ -120,7 +120,7 @@ oc create -f deploy/role_binding.yaml
 oc create -f deploy/operator.yaml
 ```
 
-Verify that the memcached-operator is up and running:
+Verify that the cost-mgmt-operator is up and running:
 
 ```
 oc get deployment
