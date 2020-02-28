@@ -90,6 +90,50 @@ oc create -f deploy/crds/cost_mgmt_cr.yaml
 
 You should now see the Ansible logs from the setup role.
 
+## Building & running the Operator as a pod inside the cluster
+
+Build the cost-mgmt-operator image and push it to a registry:
+
+```
+operator-sdk build quay.io/example/cost-mgmt-operator:v0.0.1
+docker push quay.io/example/cost-mgmt-operator:v0.0.1
+```
+
+OpenShift deployment manifests are generated in deploy/operator.yaml. The deployment image in this file needs to be modified from the placeholder REPLACE_IMAGE to the previous built image. To do this run:
+
+```
+$ sed -i 's|REPLACE_IMAGE|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
+```
+
+Note If you are performing these steps on OSX, use the following sed commands instead:
+
+```
+$ sed -i "" 's|REPLACE_IMAGE|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
+```
+
+Deploy the cost-mgmt-operator:
+
+```
+oc create -f deploy/service_account.yaml
+oc create -f deploy/role.yaml
+oc create -f deploy/role_binding.yaml
+oc create -f deploy/operator.yaml
+```
+
+Verify that the memcached-operator is up and running:
+
+```
+oc get deployment
+NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+cost-mgmt-operator
+```
+
+In order to see the logs from a particular you can run:
+
+```
+oc logs deployment/cost-mgmt-operator
+```
+
 ## Running Ansible locally for development
 
 When developing and debugging roles locally, it can be quicker to run via Ansible than through the Operator.
