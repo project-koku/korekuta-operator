@@ -2,14 +2,14 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: memcacheds.cache.example.com
+  name: cost-mgmts.cost-mgmt.openshift.io
 spec:
-  group: cache.example.com
+  group: cost-mgmt.openshift.io
   names:
-    kind: Memcached
-    listKind: MemcachedList
-    plural: memcacheds
-    singular: memcached
+    kind: CostManagement
+    listKind: CostManagementList
+    plural: cost-mgmts
+    singular: cost-mgmt
   scope: Namespaced
   subresources:
     status: {}

@@ -1,0 +1,6 @@
+---
+
+apiVersion: cost-mgmt.openshift.io/v1alpha1
+kind: CostManagement
+metadata:
+  name: cost-mgmt-example

@@ -1,0 +1,268 @@
+---
+apiVersion: metering.openshift.io/v1alpha1
+kind: ReportQuery
+metadata:
+  labels:
+    cost-management: "true"
+  name: cm-openshift-usage
+spec:
+  columns:
+    - name: report_period_start
+      type: timestamp
+      unit: date
+    - name: report_period_end
+      type: timestamp
+      unit: date
+    - name: pod
+      type: varchar
+      unit: kubernetes_pod
+    - name: namespace
+      type: varchar
+      unit: kubernetes_namespace
+    - name: node
+      type: varchar
+      unit: kubernetes_node
+    - name: interval_start
+      type: timestamp
+      unit: date
+    - name: interval_end
+      type: timestamp
+      unit: date
+    - name: pod_usage_cpu_core_seconds
+      type: double
+      unit: cpu_core_seconds
+    - name: pod_request_cpu_core_seconds
+      type: double
+      unit: cpu_core_seconds
+    - name: pod_limit_cpu_core_seconds
+      type: double
+      unit: cpu_core_seconds
+    - name: pod_usage_memory_byte_seconds
+      type: double
+      unit: byte_seconds
+    - name: pod_request_memory_byte_seconds
+      type: double
+      unit: byte_seconds
+    - name: pod_limit_memory_byte_seconds
+      type: double
+      unit: byte_seconds
+    - name: node_capacity_cpu_cores
+      type: double
+      unit: cpu_cores
+    - name: node_capacity_cpu_core_seconds
+      type: double
+      unit: cpu_core_seconds
+    - name: node_capacity_memory_bytes
+      type: double
+      unit: bytes
+    - name: node_capacity_memory_byte_seconds
+      type: double
+      unit: byte_seconds
+    - name: resource_id
+      type: varchar
+    - name: pod_labels
+      type: varchar
+  inputs:
+    - name: ReportingStart
+      type: time
+    - name: ReportingEnd
+      type: time
+    - default: pod-cpu-usage-raw
+      name: KubeCPUUsageRawDataSourceName
+      type: ReportDataSource
+    - default: pod-cpu-request-raw
+      name: KubeCPURequestRawDataSourceName
+      type: ReportDataSource
+    - default: cm-pod-cpu-limit-raw
+      name: KubeCPULimitRawDataSourceName
+      type: ReportDataSource
+    - default: pod-memory-usage-raw
+      name: KubeMemoryUsageRawDataSourceName
+      type: ReportDataSource
+    - default: pod-memory-request-raw
+      name: KubeMemoryRequestRawDataSourceName
+      type: ReportDataSource
+    - default: cm-pod-memory-limit-raw
+      name: KubeMemoryLimitRawDataSourceName
+      type: ReportDataSource
+    - default: node-cpu-capacity-raw
+      name: NodeCPUCapacityRawDataSourceName
+      type: ReportDataSource
+    - default: node-memory-capacity-raw
+      name: NodeMemoryCapacityRawDataSourceName
+      type: ReportDataSource
+    - default: cm-pod-labels-raw
+      name: PodLabelsRawDataSourceName
+      type: ReportDataSource
+  query: |
+    WITH cte_hourly_pod_cpu_usage AS (
+      SELECT namespace,
+        pod,
+        node,
+        date_trunc('hour', "timestamp") as interval_start,
+        sum(pod_usage_cpu_core_seconds) as pod_usage_cpu_core_seconds
+      FROM {| dataSourceTableName .Report.Inputs.KubeCPUUsageRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY namespace, pod, node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_pod_cpu_requests AS (
+      SELECT namespace,
+        pod,
+        node,
+        date_trunc('hour', "timestamp") as interval_start,
+        sum(pod_request_cpu_core_seconds) as pod_request_cpu_core_seconds
+      FROM {| dataSourceTableName .Report.Inputs.KubeCPURequestRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY namespace, pod, node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_pod_cpu_limits AS (
+      SELECT namespace,
+        pod,
+        node,
+        date_trunc('hour', "timestamp") as interval_start,
+        sum(pod_limit_cpu_core_seconds) as pod_limit_cpu_core_seconds
+      FROM {| dataSourceTableName .Report.Inputs.KubeCPULimitRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY namespace, pod, node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_pod_memory_usage AS (
+      SELECT namespace,
+        pod,
+        node,
+        date_trunc('hour', "timestamp") as interval_start,
+        sum(pod_usage_memory_byte_seconds) as pod_usage_memory_byte_seconds
+      FROM {| dataSourceTableName .Report.Inputs.KubeMemoryUsageRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY namespace, pod, node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_pod_memory_requests AS (
+      SELECT namespace,
+        pod,
+        node,
+        date_trunc('hour', "timestamp") as interval_start,
+        sum(pod_request_memory_byte_seconds) as pod_request_memory_byte_seconds
+      FROM {| dataSourceTableName .Report.Inputs.KubeMemoryRequestRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY namespace, pod, node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_pod_memory_limits AS (
+      SELECT namespace,
+        pod,
+        node,
+        date_trunc('hour', "timestamp") as interval_start,
+        sum(pod_limit_memory_byte_seconds) as pod_limit_memory_byte_seconds
+      FROM {| dataSourceTableName .Report.Inputs.KubeMemoryLimitRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY namespace, pod, node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_node_capacity_cpu AS (
+      SELECT node,
+        max(resource_id) as resource_id,
+        date_trunc('hour', "timestamp") as interval_start,
+        max(node_capacity_cpu_cores) as node_capacity_cpu_cores,
+        sum(node_capacity_cpu_core_seconds) as node_capacity_cpu_core_seconds
+      FROM {| dataSourceTableName .Report.Inputs.NodeCPUCapacityRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_node_capacity_memory AS (
+      SELECT node,
+        date_trunc('hour', "timestamp") as interval_start,
+        max(node_capacity_memory_bytes) as node_capacity_memory_bytes,
+        sum(node_capacity_memory_byte_seconds) as node_capacity_memory_byte_seconds
+      FROM {| dataSourceTableName .Report.Inputs.NodeMemoryCapacityRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY node, date_trunc('hour', "timestamp")
+    ),
+    cte_hourly_pod_labels AS (
+      SELECT namespace,
+        pod,
+        date_trunc('hour', "timestamp") as interval_start,
+        array_join(map_values(transform_values(map_filter(map_union(labels), (k, v) -> k LIKE 'label_%'), (k, v) -> concat(k, ':', v))), '|') as pod_labels
+      FROM {| dataSourceTableName .Report.Inputs.PodLabelsRawDataSourceName |}
+      WHERE "timestamp" >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+        AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+        AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+        AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+      GROUP BY namespace, pod, date_trunc('hour', "timestamp")
+    )
+    SELECT
+      date_trunc('month', timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart| prestoTimestamp |}') AS report_period_start,
+      date_trunc('month', timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}')  + interval '1' month AS report_period_end,
+      PCUR.pod,
+      PCUR.namespace,
+      PCUR.node,
+      PCUR.interval_start,
+      PCUR.interval_start + interval '59' minute + interval '59' second as interval_end,
+      PCUR.pod_usage_cpu_core_seconds,
+      PCRR.pod_request_cpu_core_seconds,
+      PCLR.pod_limit_cpu_core_seconds,
+      PMUR.pod_usage_memory_byte_seconds,
+      PMRR.pod_request_memory_byte_seconds,
+      PMLR.pod_limit_memory_byte_seconds,
+      NCC.node_capacity_cpu_cores,
+      NCC.node_capacity_cpu_core_seconds,
+      NMC.node_capacity_memory_bytes,
+      NMC.node_capacity_memory_byte_seconds,
+      NCC.resource_id,
+      PL.pod_labels
+    FROM cte_hourly_pod_cpu_usage AS PCUR
+    LEFT JOIN cte_hourly_pod_cpu_requests AS PCRR
+        ON PCUR.pod = PCRR.pod
+          AND PCUR.namespace = PCRR.namespace
+          AND PCUR.node = PCRR.node
+          AND PCUR.interval_start = PCRR.interval_start
+    LEFT JOIN cte_hourly_pod_cpu_limits AS PCLR
+        ON PCUR.pod = PCLR.pod
+          AND PCUR.namespace = PCLR.namespace
+          AND PCUR.node = PCLR.node
+          AND PCUR.interval_start = PCLR.interval_start
+    LEFT JOIN cte_hourly_pod_memory_usage AS PMUR
+        ON PCUR.pod = PMUR.pod
+          AND PCUR.namespace = PMUR.namespace
+          AND PCUR.node = PMUR.node
+          AND PCUR.interval_start = PMUR.interval_start
+    LEFT JOIN cte_hourly_pod_memory_requests AS PMRR
+        ON PCUR.pod = PMRR.pod
+          AND PCUR.namespace = PMRR.namespace
+          AND PCUR.node = PMRR.node
+          AND PCUR.interval_start = PMRR.interval_start
+    LEFT JOIN cte_hourly_pod_memory_limits AS PMLR
+        ON PCUR.pod = PMLR.pod
+          AND PCUR.namespace = PMLR.namespace
+          AND PCUR.node = PMLR.node
+          AND PCUR.interval_start = PMLR.interval_start
+    LEFT JOIN cte_hourly_node_capacity_cpu AS NCC
+        ON PCUR.node = NCC.node
+          AND PCUR.interval_start = NCC.interval_start
+    LEFT JOIN cte_hourly_node_capacity_memory AS NMC
+        ON PCUR.node = NMC.node
+          AND PCUR.interval_start = NMC.interval_start
+    LEFT JOIN cte_hourly_pod_labels AS PL
+        ON PCUR.namespace = PL.namespace
+          AND PCUR.pod = PL.pod
+          AND PCUR.interval_start = PL.interval_start

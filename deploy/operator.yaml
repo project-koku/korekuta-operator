@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: memcached-operator
+  name: cost-mgmt-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: memcached-operator
+      name: cost-mgmt-operator
   template:
     metadata:
       labels:
-        name: memcached-operator
+        name: cost-mgmt-operator
     spec:
-      serviceAccountName: memcached-operator
+      serviceAccountName: cost-mgmt-operator
       containers:
         - name: ansible
           command:
@@ -21,16 +21,16 @@ spec:
             - /tmp/ansible-operator/runner
             - stdout
             # Replace this with the built image name
-          image: "{{ REPLACE_IMAGE }}"
-          imagePullPolicy: "{{ pull_policy|default('Always') }}"
+          image: "REPLACE_IMAGE"
+          imagePullPolicy: "Always"
           volumeMounts:
             - mountPath: /tmp/ansible-operator/runner
               name: runner
               readOnly: true
         - name: operator
           # Replace this with the built image name
-          image: "{{ REPLACE_IMAGE }}"
-          imagePullPolicy: "{{ pull_policy|default('Always') }}"
+          image: "REPLACE_IMAGE"
+          imagePullPolicy: "Always"
           volumeMounts:
             - mountPath: /tmp/ansible-operator/runner
               name: runner
@@ -44,7 +44,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "memcached-operator"
+              value: "cost-mgmt-operator"
             - name: ANSIBLE_GATHERING
               value: explicit
       volumes:

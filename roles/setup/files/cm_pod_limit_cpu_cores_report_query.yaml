@@ -1,0 +1,51 @@
+---
+apiVersion: metering.openshift.io/v1alpha1
+kind: ReportQuery
+metadata:
+  labels:
+    cost-management: "true"
+  name: cm-pod-cpu-limit-raw
+spec:
+  columns:
+    - name: pod
+      type: varchar
+      unit: kubernetes_pod
+    - name: namespace
+      type: varchar
+      unit: kubernetes_namespace
+    - name: node
+      type: varchar
+      unit: kubernetes_node
+    - name: labels
+      tableHidden: true
+      type: map<varchar, varchar>
+    - name: pod_limit_cpu_cores
+      type: double
+      unit: cpu_cores
+    - name: timeprecision
+      type: double
+      unit: seconds
+    - name: pod_limit_cpu_core_seconds
+      type: double
+      unit: cpu_core_seconds
+    - name: timestamp
+      type: timestamp
+      unit: date
+    - name: dt
+      type: varchar
+  inputs:
+    - default: pod-limit-cpu-cores
+      name: PodLimitCpuCoresDataSourceName
+      type: ReportDataSource
+  query: |
+    SELECT labels['pod'] as pod,
+        labels['namespace'] as namespace,
+        element_at(labels, 'node') as node,
+        labels,
+        amount as pod_limit_cpu_cores,
+        timeprecision,
+        amount * timeprecision as pod_limit_cpu_core_seconds,
+        "timestamp",
+        dt
+    FROM {| dataSourceTableName .Report.Inputs.PodLimitCpuCoresDataSourceName |}
+    WHERE element_at(labels, 'node') IS NOT NULL

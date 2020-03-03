@@ -1,5 +1,6 @@
 ---
+# initial setup steps
 - version: v1alpha1
-  group: cache.example.com
-  kind: Memcached
-  role: /opt/ansible/roles/memcached
+  group: cost-mgmt.openshift.io
+  kind: CostManagement
+  role: /opt/ansible/roles/setup

@@ -4,7 +4,7 @@
   # using command so we don't need to install any dependencies
   hosts: k8s
   vars:
-    image_name: cache.example.com/memcached-operator:testing
+    image_name: cost-mgmt.openshift.io/cost-mgmt-operator:testing
   tasks:
     - name: Get existing image hash
       command: docker images -q {{ image_name }}
@@ -26,9 +26,9 @@
     ansible_python_interpreter: '{{ ansible_playbook_python }}'
     deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
     pull_policy: Never
-    REPLACE_IMAGE: cache.example.com/memcached-operator:testing
+    REPLACE_IMAGE: cost-mgmt.openshift.io/cost-mgmt-operator:testing
     custom_resource: "{{ lookup('file', '/'.join([deploy_dir,
-      'crds/cache.example.com_v1alpha1_memcached_cr.yaml'])) | from_yaml }}"
+      'crds/cost_mgmt_cr.yaml'])) | from_yaml }}"
   tasks:
     - block:
         - name: Delete the Operator Deployment
@@ -61,67 +61,74 @@
             definition: "{{ lookup('template',
               '/'.join([deploy_dir, 'operator.yaml'])) }}"
 
-        - name: Create the cache.example.com/v1alpha1.Memcached
+        - name: Create the metering namespace
+          k8s:
+            api_version: v1
+            name: "openshift-metering"
+            kind: Namespace
+            state: present
+
+        - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement
           k8s:
             state: present
             namespace: '{{ namespace }}'
             definition: '{{ custom_resource }}'
 
-        - name: Wait 2m for reconciliation to run
-          k8s_info:
-            api_version: '{{ custom_resource.apiVersion }}'
-            kind: '{{ custom_resource.kind }}'
-            namespace: '{{ namespace }}'
-            name: '{{ custom_resource.metadata.name }}'
-          register: cr
-          until:
-            - "'Successful' in
-              (cr | json_query('resources[].status.conditions[].reason'))"
-          delay: 12
-          retries: 10
+      #   - name: Wait 2m for reconciliation to run
+      #     k8s_info:
+      #       api_version: '{{ custom_resource.apiVersion }}'
+      #       kind: '{{ custom_resource.kind }}'
+      #       namespace: '{{ namespace }}'
+      #       name: '{{ custom_resource.metadata.name }}'
+      #     register: cr
+      #     until:
+      #       - "'Running' in
+      #         (cr | json_query('resources[].status.conditions[].reason'))"
+      #     delay: 12
+      #     retries: 10
 
-      rescue:
-        - name: debug cr
-          ignore_errors: yes
-          failed_when: false
-          debug:
-            var: debug_cr
-          vars:
-            debug_cr: '{{ lookup("k8s",
-              kind=custom_resource.kind,
-              api_version=custom_resource.apiVersion,
-              namespace=namespace,
-              resource_name=custom_resource.metadata.name
-            )}}'
+      # rescue:
+      #   - name: debug cr
+      #     ignore_errors: yes
+      #     failed_when: false
+      #     debug:
+      #       var: debug_cr
+      #     vars:
+      #       debug_cr: '{{ lookup("k8s",
+      #         kind=custom_resource.kind,
+      #         api_version=custom_resource.apiVersion,
+      #         namespace=namespace,
+      #         resource_name=custom_resource.metadata.name
+      #       )}}'
 
-        - name: debug memcached lookup
-          ignore_errors: yes
-          failed_when: false
-          debug:
-            var: deploy
-          vars:
-            deploy: '{{ lookup("k8s",
-              kind="Deployment",
-              api_version="apps/v1",
-              namespace=namespace,
-              label_selector="app=memcached"
-            )}}'
+      #   - name: debug cost-mgmt lookup
+      #     ignore_errors: yes
+      #     failed_when: false
+      #     debug:
+      #       var: deploy
+      #     vars:
+      #       deploy: '{{ lookup("k8s",
+      #         kind="Deployment",
+      #         api_version="apps/v1",
+      #         namespace=namespace,
+      #         label_selector="app=cost-mgmt"
+      #       )}}'
 
-        - name: get operator logs
-          ignore_errors: yes
-          failed_when: false
-          command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }}
-          environment:
-            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
-          vars:
-            definition: "{{ lookup('template',
-              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
-          register: log
+      #   - name: get operator logs
+      #     ignore_errors: yes
+      #     failed_when: false
+      #     command: kubectl logs
+      #       deployment/{{ definition.metadata.name }} -n {{ namespace }}
+      #     environment:
+      #       KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
+      #     vars:
+      #       definition: "{{ lookup('template',
+      #         '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
+      #     register: log
 
-        - debug: var=log.stdout_lines
+      #   - debug: var=log.stdout_lines
 
-        - fail:
-            msg: "Failed on action: converge"
+      #   - fail:
+      #       msg: "Failed on action: converge"
 
 - import_playbook: '{{ playbook_dir }}/../default/asserts.yml'

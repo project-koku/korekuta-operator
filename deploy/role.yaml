@@ -3,7 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: memcached-operator
+  name: cost-mgmt-operator
 rules:
   - apiGroups:
       - ""
@@ -49,7 +49,7 @@ rules:
   - apiGroups:
       - apps
     resourceNames:
-      - memcached-operator
+      - cost-mgmt-operator
     resources:
       - deployments/finalizers
     verbs:
@@ -68,9 +68,32 @@ rules:
     verbs:
       - get
   - apiGroups:
-      - cache.example.com
+      - cost-mgmt.openshift.io
     resources:
       - '*'
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - "metering.openshift.io"
+    resources:
+      - pods
+      - services
+      - services/finalizers
+      - endpoints
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+      - reportdatasources
+      - reportqueries
+      - reports
+      - meteringconfigs
     verbs:
       - create
       - delete
