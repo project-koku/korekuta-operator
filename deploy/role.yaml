@@ -79,3 +79,26 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+      - "metering.openshift.io"
+    resources:
+      - pods
+      - services
+      - services/finalizers
+      - endpoints
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+      - reportdatasources
+      - reportqueries
+      - reports
+      - meteringconfigs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
