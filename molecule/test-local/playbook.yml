@@ -61,6 +61,13 @@
             definition: "{{ lookup('template',
               '/'.join([deploy_dir, 'operator.yaml'])) }}"
 
+        - name: Create the metering namespace
+          k8s:
+            api_version: v1
+            name: "openshift-metering"
+            kind: Namespace
+            state: present
+
         - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement
           k8s:
             state: present

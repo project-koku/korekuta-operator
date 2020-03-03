@@ -1,4 +1,15 @@
 ---
+- name: Search for metering resources
+  k8s_info:
+    api_version: v1
+    kind: MeteringConfig
+    namespace: "{{ namespace }}"
+  register: metering_objects
+
+- name: Ensure metering has been configured
+  fail:
+    msg: 'Metering has not been configured.'
+  when: not metering_objects.resources
 
 - name: Create datasources and reports
   k8s:
