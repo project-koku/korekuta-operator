@@ -1,0 +1,19 @@
+---
+
+apiVersion: metering.openshift.io/v1
+kind: MeteringConfig
+metadata:
+  creationTimestamp: '2020-02-28T18:58:11Z'
+  generation: 1
+  name: operator-metering
+  namespace: openshift-metering
+spec:
+  storage:
+    hive:
+      s3:
+        bucket: ocpmetering/chambrid/
+        createBucket: false
+        region: us-east-1
+        secretName: metering-aws
+      type: s3
+    type: hive
