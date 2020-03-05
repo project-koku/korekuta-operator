@@ -11,7 +11,7 @@ spec:
   storage:
     hive:
       s3:
-        bucket: ocpmetering/chambrid/
+        bucket: ocpmetering/data/
         createBucket: false
         region: us-east-1
         secretName: metering-aws
