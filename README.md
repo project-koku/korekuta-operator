@@ -91,13 +91,13 @@ docker push quay.io/example/cost-mgmt-operator:v0.0.1
 OpenShift deployment manifests are generated in deploy/operator.yaml. The deployment image in this file needs to be modified from the placeholder REPLACE_IMAGE to the previous built image. To do this run:
 
 ```
-sed -i 's|REPLACE_IMAGE|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
+sed -i 's|{{ REPLACE_IMAGE }}|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
 ```
 
-Note If you are performing these steps on OSX, use the following sed commands instead:
+Note: If you are performing these steps on OSX, use the following sed commands instead:
 
 ```
-sed -i "" 's|REPLACE_IMAGE|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
+sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
 ```
 
 Under the quay repository settings, make sure that you change the `Repository Visibility` to public. Now, deploy the cost-mgmt-operator:
@@ -108,6 +108,8 @@ oc create -f deploy/role.yaml
 oc create -f deploy/role_binding.yaml
 oc create -f deploy/operator.yaml
 ```
+
+Note: If you get an error about the `ImagePullPolicy` when deploying the operator, search for and replace `"{{ pull_policy|default('Always') }}"` with `"Always"` inside of the `deploy/operator.yaml` and redeploy the operator.
 
 Verify that the cost-mgmt-operator is up and running:
 

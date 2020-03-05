@@ -218,20 +218,7 @@
             - "'All items completed' in
               (cr | json_query('resources[].status.conditions[].message'))"
           delay: 12
-          retries: 20
-
-        - name: debug cr
-          ignore_errors: yes
-          failed_when: false
-          debug:
-            var: debug_cr
-          vars:
-            debug_cr: '{{ lookup("k8s",
-              kind=custom_resource.kind,
-              api_version=custom_resource.apiVersion,
-              namespace=namespace,
-              resource_name=custom_resource.metadata.name
-            )}}'
+          retries: 10
 
       rescue:
         - name: debug cr
