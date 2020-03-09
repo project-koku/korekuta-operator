@@ -1,0 +1,133 @@
+---
+
+- name: Obtain cluster version info
+  k8s_info:
+    api_version: v1
+    kind: ConfigMap
+    namespace: "{{ namespace }}"
+    name: cost-mgmt-setup
+  register: cost_mgmt_setup
+
+- name: Set Cluster ID
+  set_fact:
+    ocp_cluster_id: "{{ cost_mgmt_setup.resources[0].data.clusterID }}"
+
+- name: Set Validation
+  set_fact:
+    ocp_validate_cert: "{{ cost_mgmt_setup.resources[0].data.validate_cert }}"
+
+- name: Set Validation
+  set_fact:
+    token_name: "{{ cost_mgmt_setup.resources[0].data.service_token_name }}"
+
+- name: Obtain metering api info
+  k8s_info:
+    api_version: v1
+    kind: Route
+    namespace: "{{ namespace }}"
+  register: metering_route
+
+- name: Set metering route
+  set_fact:
+    metering_api_route: "https://{{ metering_route.resources[0].spec.host }}/api/v1/reports/get"
+
+- name: Get the service_account cert
+  k8s_info:
+    api_version: v1
+    kind: Secret
+    namespace: "{{ namespace }}"
+    name: "{{ token_name }}"
+  register: service_token
+
+- name: Get the service-ca crt
+  set_fact:
+    service_account_token: "{{ service_token.resources[0].data.token | b64decode }}"
+
+- name: Set format facts
+  set_fact:
+    collect_file_prefix: '{{ collect_manifest_uuid }}'
+    format: "&format={{ collect_format }}"
+    namespace: "&namespace={{ namespace }}"
+
+# getting a little clever to build lists to append into
+- name: initialize fact lists
+  set_fact:
+    api_params: []
+    api_urls: []
+    csv_files: []
+
+# this appends the string inside the brackets to the 'api_params' list.
+- name: compile URL query params, append to param list
+  set_fact:
+    api_params: "{{ api_params + ['?name='+item+format+namespace] }}"
+  with_items: "{{ collect_reports }}"
+
+# this appends the string inside the brackets to the 'api_urls' list.
+- name: assemble compiled URL facts, append to list.
+  set_fact:
+    api_urls: "{{ api_urls + [metering_api_route+item] }}"
+  with_items: "{{ api_params }}"
+
+- name: Set download_path
+  set_fact:
+    collect_cluster_download_path: '{{ collect_download_path }}/{{  ocp_cluster_id }}'
+
+- name: Remove temp files
+  file:
+    path: '{{ collect_cluster_download_path }}'
+    state: absent
+  when: collect_delete_after | bool
+
+- name: Create temp dir for downloaded files
+  file:
+    path: '{{ collect_cluster_download_path }}'
+    state: directory
+    mode: 0777
+
+- name: Download OCP report from endpoint
+  get_url:
+    url: '{{ item }}'
+    headers:
+      Authorization: "Bearer {{ service_account_token }}"
+    dest: '{{ collect_cluster_download_path }}/{{ collect_file_prefix }}_openshift_usage_report.{{ idx }}.{{ collect_format }}'
+    validate_certs: 0
+    timeout: '{{ collect_ocp_report_timeout }}'
+  with_items: "{{ api_urls }}"
+  loop_control:
+    index_var: idx
+  register: download_result
+
+- name: append filename to fact list
+  set_fact:
+    csv_files: "{{ csv_files + [item.dest | basename] }}"
+  with_items: "{{ download_result.results }}"
+
+- name: Check that required files exist
+  stat:
+    path: '{{ collect_cluster_download_path + "/" + item }}'
+  register: csv_stat_result
+  with_items:
+    - '{{ csv_files }}'
+
+- name: Check for empty download results
+  fail:
+    msg: 'Downloaded file {{ item }} has no content or could not be found: {{ item.stat }}.'
+  when: not item.stat.exists or (item.stat.exists and item.stat.size <= 0)
+  with_items:
+    - '{{ csv_stat_result.results }}'
+
+- name: copy packaging script to host
+  copy:
+    src: files/package_report.py
+    dest: '{{ collect_download_path }}/{{  ocp_cluster_id }}/package_report.py'
+    mode: 0755
+
+- name: Run packaging script to prepare reports for sending to Insights
+  command: >-
+    '{{ collect_download_path }}/{{  ocp_cluster_id }}/package_report.py'
+        --filepath {{ collect_cluster_download_path }}
+        --max-size {{ collect_max_csvfile_size }}
+        --ocp-cluster-id {{ ocp_cluster_id }}
+        --overwrite
+
+  register: packaged_reports

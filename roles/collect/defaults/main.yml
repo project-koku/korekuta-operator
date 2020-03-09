@@ -1,0 +1,12 @@
+---
+namespace: openshift-metering
+collect_format: 'csv'
+collect_manifest_uuid: '{{ 99999999999999999999 | random | to_uuid }}'
+collect_reports:
+  - 'cm-openshift-usage-lookback'
+  - 'cm-openshift-persistentvolumeclaim-lookback'
+  - 'cm-openshift-node-labels-lookback'
+collect_download_path: '/tmp/korekuta-operator-collect'
+collect_delete_after: 'true'
+collect_ocp_report_timeout: 60
+collect_max_csvfile_size: 99
