@@ -1,6 +1,6 @@
 ---
 
-- name: Obtain cluster version info
+- name: Obtain cost-mgmt-setup info
   k8s_info:
     api_version: v1
     kind: ConfigMap
@@ -8,15 +8,15 @@
     name: cost-mgmt-setup
   register: cost_mgmt_setup
 
-- name: Set Cluster ID
+- name: Set cluster ID
   set_fact:
     ocp_cluster_id: "{{ cost_mgmt_setup.resources[0].data.clusterID }}"
 
-- name: Set Validation
+- name: Set validation boolean
   set_fact:
     ocp_validate_cert: "{{ cost_mgmt_setup.resources[0].data.validate_cert }}"
 
-- name: Set Validation
+- name: Set service account token name
   set_fact:
     token_name: "{{ cost_mgmt_setup.resources[0].data.service_token_name }}"
 
@@ -27,11 +27,11 @@
     namespace: "{{ namespace }}"
   register: metering_route
 
-- name: Set metering route
+- name: Set metering api route
   set_fact:
     metering_api_route: "https://{{ metering_route.resources[0].spec.host }}/api/v1/reports/get"
 
-- name: Get the service_account cert
+- name: Get the service account token
   k8s_info:
     api_version: v1
     kind: Secret
@@ -39,11 +39,11 @@
     name: "{{ token_name }}"
   register: service_token
 
-- name: Get the service-ca crt
+- name: Decode the service account token
   set_fact:
     service_account_token: "{{ service_token.resources[0].data.token | b64decode }}"
 
-- name: Set format facts
+- name: Set download request facts
   set_fact:
     collect_file_prefix: '{{ collect_manifest_uuid }}'
     format: "&format={{ collect_format }}"
@@ -90,7 +90,7 @@
     headers:
       Authorization: "Bearer {{ service_account_token }}"
     dest: '{{ collect_cluster_download_path }}/{{ collect_file_prefix }}_openshift_usage_report.{{ idx }}.{{ collect_format }}'
-    validate_certs: 0
+    validate_certs: '{{ ocp_validate_cert }}'
     timeout: '{{ collect_ocp_report_timeout }}'
   with_items: "{{ api_urls }}"
   loop_control:

@@ -83,10 +83,10 @@ metadata:
 data:
   clusterID: 315d46a7-ac9e-4253-980c-f401999dc3ae
   service_token_name: reporting-operator-token-357akj
-  validate_cert: 'true'
+  validate_cert: '0'
 ```
 
-Note: The only thing that you should have to input is the name of the ConfigMap, and the `clusterID`, `service_token_name`, and `validate_cert` values under data. 
+Note: The only thing that you should have to input is the name of the ConfigMap, and the `clusterID`, `service_token_name`, and `validate_cert` values under data.
 
 Finally, run the operator locally:
 
