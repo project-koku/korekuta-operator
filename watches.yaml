@@ -10,4 +10,4 @@
   group: cost-mgmt-data.openshift.io
   kind: CostManagementData
   role: /opt/ansible/roles/collect
-  reconcilePeriod: 60m
+  reconcilePeriod: 360m
