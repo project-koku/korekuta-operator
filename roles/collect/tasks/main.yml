@@ -28,7 +28,7 @@
   when: cost_mgmt_setup.resources
 
 - name: Check for validation boolean
-  debug: msg='Validation is not defined'
+  debug: msg='HTTPS certificate validation variable is not defined; defaulting to true'
   when: not ocp_validate_cert
 
 - name: Set service account token name
@@ -37,13 +37,13 @@
   when: cost_mgmt_setup.resources
 
 - name: Check for service account token name
-  debug: msg='Service account token name is not defined'
+  debug: msg='Reporting Operator service account token name is not defined'
   when: not token_name
 
-- name: Fail if the clusterID, validation, or service token are not defined
+- name: Fail if the clusterID or service token are not defined
   fail:
-    msg: 'The cost-mgmt-setup ConfigMap requires the clusterID, validate_cert, and service_token_name to be defined.'
-  when: not ocp_cluster_id or not ocp_validate_cert or not token_name
+    msg: 'The cost-mgmt-setup ConfigMap requires the clusterID and service_token_name to be defined.'
+  when: not ocp_cluster_id or or not token_name
 
 - name: Obtain metering api info
   k8s_info:
