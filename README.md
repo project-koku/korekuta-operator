@@ -72,7 +72,7 @@ Next, since we are running locally, we need to make sure that the path to the ro
   role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/setup
 ```
 
-Since the Operator is not scoped to the cluster, there is some information that our Operator does not have access to. For the shortterm, we are going to create a ConfigMap to temporarily access the information that we need. In the OpenShift UI, under the ``openshift-metering`` namespace, click on ConfigMaps, and create a new ConfigMap named ``cost-mgmt-setup`` similar to the following:
+Since the Operator is not scoped to the cluster, there is some information that our Operator does not have access to. For the short-term, we are going to create a ConfigMap to temporarily access the information that we need. In the OpenShift UI, under the ``openshift-metering`` namespace, click on ConfigMaps, and create a new ConfigMap named ``cost-mgmt-setup`` similar to the following:
 
 ```
 apiVersion: v1
