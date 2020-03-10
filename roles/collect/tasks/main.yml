@@ -43,7 +43,7 @@
 - name: Fail if the clusterID or service token are not defined
   fail:
     msg: 'The cost-mgmt-setup ConfigMap requires the clusterID and service_token_name to be defined.'
-  when: not ocp_cluster_id or or not token_name
+  when: not ocp_cluster_id or not token_name
 
 - name: Obtain metering api info
   k8s_info:
