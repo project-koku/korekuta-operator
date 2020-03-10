@@ -63,10 +63,12 @@ logging.basicConfig(format=LOG_FORMAT, level=logging.ERROR, stream=sys.stdout)
 
 def parse_args():
     """Handle CLI arg parsing."""
-    parser = argparse.ArgumentParser(description="Korekuta CSV file packaging script", prog=sys.argv[0])
+    parser = argparse.ArgumentParser(
+        description="Cost Management CSV file packaging script", prog=sys.argv[0])
 
     # required args
-    parser.add_argument("-f", "--filepath", required=True, help="path to files to package")
+    parser.add_argument("-f", "--filepath", required=True,
+                        help="path to files to package")
     parser.add_argument(
         "-s",
         "--max-size",
@@ -77,8 +79,10 @@ def parse_args():
     parser.add_argument(
         "-o", "--overwrite", action="store_true", default=False, help="whether to overwrite existing files."
     )
-    parser.add_argument("--ocp-cluster-id", required=True, help="OCP Cluster ID")
-    parser.add_argument("-v", "--verbosity", action="count", default=0, help="increase verbosity (up to -vvv)")
+    parser.add_argument("--ocp-cluster-id", required=True,
+                        help="OCP Cluster ID")
+    parser.add_argument("-v", "--verbosity", action="count",
+                        default=0, help="increase verbosity (up to -vvv)")
     return parser.parse_args()
 
 
@@ -162,7 +166,8 @@ def split_files(filepath, max_size):
 
                 part = 1
                 while True:
-                    newfile, eof = write_part(abspath, csvreader, csvheader, num=part, size=(max_size * MEGABYTE))
+                    newfile, eof = write_part(
+                        abspath, csvreader, csvheader, num=part, size=(max_size * MEGABYTE))
                     split_files.append(newfile)
                     part += 1
                     if eof or part >= MAX_SPLITS:
@@ -244,14 +249,16 @@ if "__main__" in __name__:
         manifest_filename = render_manifest(args)
 
         tarpath = args.filepath + "/../"
-        tarfiletmpl = "korekuta_{}.tar.gz"
+        tarfiletmpl = "cost-mgmt{}.tar.gz"
         for idx, filename in enumerate(os.listdir(args.filepath)):
             if ".csv" in filename:
-                tarfilename = os.path.abspath(tarpath + tarfiletmpl.format(idx))
-                out_files.append(write_tarball(tarfilename, [f"{args.filepath}/{filename}", manifest_filename]))
+                tarfilename = os.path.abspath(
+                    tarpath + tarfiletmpl.format(idx))
+                out_files.append(write_tarball(
+                    tarfilename, [f"{args.filepath}/{filename}", manifest_filename]))
     else:
         render_manifest(args)
-        tarfilename = os.path.abspath(args.filepath + "/../korekuta.tar.gz")
+        tarfilename = os.path.abspath(args.filepath + "/../cost-mgmt.tar.gz")
         out_files.append(write_tarball(tarfilename, [args.filepath]))
 
     for fname in out_files:

@@ -27,6 +27,8 @@ spec:
             - mountPath: /tmp/ansible-operator/runner
               name: runner
               readOnly: true
+            - mountPath: /tmp/cost-mgmt-operator-collect
+              name: cost-mgmt-operator
         - name: operator
           # Replace this with the built image name
           image: "{{ REPLACE_IMAGE }}"
@@ -34,6 +36,8 @@ spec:
           volumeMounts:
             - mountPath: /tmp/ansible-operator/runner
               name: runner
+            - mountPath: /tmp/cost-mgmt-operator-collect
+              name: cost-mgmt-operator
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
@@ -50,3 +54,13 @@ spec:
       volumes:
         - name: runner
           emptyDir: {}
+        - name: cost-mgmt-operator
+  volumeClaimTemplates:
+    - metadata:
+        name: cost-mgmt-operator
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

@@ -8,17 +8,42 @@
     name: cost-mgmt-setup
   register: cost_mgmt_setup
 
+- name: Fail if cost-mgmt-setup does not exist
+  fail:
+    msg: 'The cost-mgmt-setup ConfigMap has not been configured.'
+  when: not cost_mgmt_setup.resources
+
 - name: Set cluster ID
   set_fact:
     ocp_cluster_id: "{{ cost_mgmt_setup.resources[0].data.clusterID }}"
+  when: cost_mgmt_setup.resources
+
+- name: Check for OCP clusterID
+  debug: msg='OCP clusterID is not defined'
+  when: not ocp_cluster_id
 
 - name: Set validation boolean
   set_fact:
     ocp_validate_cert: "{{ cost_mgmt_setup.resources[0].data.validate_cert }}"
+  when: cost_mgmt_setup.resources
+
+- name: Check for validation boolean
+  debug: msg='Validation is not defined'
+  when: not ocp_validate_cert
 
 - name: Set service account token name
   set_fact:
     token_name: "{{ cost_mgmt_setup.resources[0].data.service_token_name }}"
+  when: cost_mgmt_setup.resources
+
+- name: Check for service account token name
+  debug: msg='Service account token name is not defined'
+  when: not token_name
+
+- name: Fail if the clusterID, validation, or service token are not defined
+  fail:
+    msg: 'The cost-mgmt-setup ConfigMap requires the clusterID, validate_cert, and service_token_name to be defined.'
+  when: not ocp_cluster_id or not ocp_validate_cert or not token_name
 
 - name: Obtain metering api info
   k8s_info:
