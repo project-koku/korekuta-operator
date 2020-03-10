@@ -68,7 +68,19 @@ rules:
     verbs:
       - get
   - apiGroups:
-      - cost-mgmt.openshift.io
+      - "cost-mgmt.openshift.io"
+    resources:
+      - '*'
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - "cost-mgmt-data.openshift.io"
     resources:
       - '*'
     verbs:
@@ -102,3 +114,9 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+      - "route.openshift.io"
+    resources:
+      - routes
+    verbs:
+      - list

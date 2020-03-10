@@ -29,8 +29,10 @@
     REPLACE_IMAGE: cost-mgmt.openshift.io/cost-mgmt-operator:testing
     custom_resource: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_cr.yaml'])) | from_yaml }}"
-    custom_resource_def: "{{ lookup('file', '/'.join([deploy_dir,
+    cm_crd: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_crd.yaml'])) | from_yaml }}"
+    cm_data_crd: "{{ lookup('file', '/'.join([deploy_dir,
+      'crds/cost_mgmt_data_crd.yaml'])) | from_yaml }}"
     metering_cr: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/metering_cr.yaml'])) | from_yaml }}"
     metering_crd: "{{ lookup('file', '/'.join([deploy_dir,
@@ -65,7 +67,13 @@
           k8s:
             state: present
             namespace: '{{ namespace }}'
-            definition: '{{ custom_resource_def }}'
+            definition: '{{ cm_crd }}'
+
+        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData crd
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ cm_data_crd }}'
 
         - name: Create the Operator Deployment
           k8s:
@@ -193,7 +201,13 @@
           k8s:
             state: present
             namespace: '{{ namespace }}'
-            definition: '{{ custom_resource_def }}'
+            definition: '{{ cm_crd }}'
+
+        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData crd
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ cm_data_crd }}'
 
         - name: Create the Operator Deployment
           k8s:

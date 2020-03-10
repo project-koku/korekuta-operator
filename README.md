@@ -59,6 +59,7 @@ Although we are not going to run as a pod inside the cluster, OpenShift needs to
 
 ```
 oc create -f deploy/crds/cost_mgmt_crd.yaml
+oc create -f deploy/crds/cost_mgmt_data_crd.yaml
 ```
 
 Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the setup role in the current repository:
@@ -70,6 +71,22 @@ Next, since we are running locally, we need to make sure that the path to the ro
   kind: CostManagement
   role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/setup
 ```
+
+Since the Operator is not scoped to the cluster, there is some information that our Operator does not have access to. For the short-term, we are going to create a ConfigMap to temporarily access the information that we need. In the OpenShift UI, under the ``openshift-metering`` namespace, click on ConfigMaps, and create a new ConfigMap named ``cost-mgmt-setup`` similar to the following:
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example
+  namespace: openshift-metering
+data:
+  clusterID: 315d46a7-ac9e-4253-980c-f401999dc3ae
+  service_token_name: reporting-operator-token-357akj
+  validate_cert: 'false'
+```
+
+Note: The only thing that you should have to input is the name of the ConfigMap, and the `clusterID`, `service_token_name`, and `validate_cert` values under data.
 
 Finally, run the operator locally:
 
@@ -132,6 +149,7 @@ To start the setup role, a CostManagement custom resource has to be present. Run
 
 ```
 oc create -f deploy/crds/cost_mgmt_cr.yaml
+oc create -f deploy/crds/cost_mgmt_data_cr.yaml
 ```
 
 You should now see the Ansible logs from the setup role.
