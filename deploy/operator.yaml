@@ -60,7 +60,7 @@ spec:
         name: cost-mgmt-operator
       spec:
         accessModes:
-        - ReadWriteOnce
+          - ReadWriteOnce
         resources:
           requests:
             storage: 1Gi
