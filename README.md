@@ -83,7 +83,7 @@ metadata:
 data:
   clusterID: 315d46a7-ac9e-4253-980c-f401999dc3ae
   service_token_name: reporting-operator-token-357akj
-  validate_cert: '0'
+  validate_cert: 'false'
 ```
 
 Note: The only thing that you should have to input is the name of the ConfigMap, and the `clusterID`, `service_token_name`, and `validate_cert` values under data.
