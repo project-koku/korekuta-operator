@@ -8,10 +8,6 @@
     name: cost-mgmt-setup
   register: cost_mgmt_setup
 
-- name: debug cr
-  debug:
-    var: cost_mgmt_setup
-
 - name: Fail if cost-mgmt-setup does not exist
   fail:
     msg: 'The cost-mgmt-setup ConfigMap has not been configured.'
