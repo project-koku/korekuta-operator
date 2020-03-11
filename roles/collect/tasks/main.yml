@@ -33,7 +33,7 @@
 
 - name: Set service account token name
   set_fact:
-    token_name: "{{ cost_mgmt_setup.resources[0].spec.service_token_name }}"
+    reporting_operator_token_name: "{{ cost_mgmt_setup.resources[0].spec.service_token_name }}"
   when: cost_mgmt_setup.resources
 
 - name: Check for service account token name
