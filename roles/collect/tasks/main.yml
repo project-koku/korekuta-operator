@@ -2,11 +2,15 @@
 
 - name: Obtain cost-mgmt-setup info
   k8s_info:
-    api_version: v1
-    kind: ConfigMap
+    api_version: cost-mgmt.openshift.io/v1alpha1
+    kind: CostManagement
     namespace: "{{ namespace }}"
     name: cost-mgmt-setup
   register: cost_mgmt_setup
+
+- name: debug cr
+  debug:
+    var: cost_mgmt_setup
 
 - name: Fail if cost-mgmt-setup does not exist
   fail:
@@ -15,7 +19,7 @@
 
 - name: Set cluster ID
   set_fact:
-    ocp_cluster_id: "{{ cost_mgmt_setup.resources[0].data.clusterID }}"
+    ocp_cluster_id: "{{ cost_mgmt_setup.resources[0].spec.clusterID }}"
   when: cost_mgmt_setup.resources
 
 - name: Check for OCP clusterID
@@ -24,16 +28,16 @@
 
 - name: Set validation boolean
   set_fact:
-    ocp_validate_cert: "{{ cost_mgmt_setup.resources[0].data.validate_cert }}"
+    ocp_validate_cert: "{{ cost_mgmt_setup.resources[0].spec.validate_cert }}"
   when: cost_mgmt_setup.resources
 
 - name: Check for validation boolean
   debug: msg='HTTPS certificate validation variable is not defined; defaulting to true'
-  when: not ocp_validate_cert
+  when: not cost_mgmt_setup.resources
 
 - name: Set service account token name
   set_fact:
-    token_name: "{{ cost_mgmt_setup.resources[0].data.service_token_name }}"
+    token_name: "{{ cost_mgmt_setup.resources[0].spec.service_token_name }}"
   when: cost_mgmt_setup.resources
 
 - name: Check for service account token name

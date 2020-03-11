@@ -136,16 +136,32 @@ NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 cost-mgmt-operator
 ```
 
-In order to see the logs from a particular you can run:
+In order to see the logs from the operator deployment you can run:
 
 ```
-oc logs deployment/cost-mgmt-operator
+oc logs -f deployment/cost-mgmt-operator --container ansible
+oc logs -f deployment/cost-mgmt-operator --container operator
 ```
 
 ## Kicking off the setup role
 The setup role is going to create the reports defined in `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
-To start the setup role, a CostManagement custom resource has to be present. Run the following to create a CostManagement CR:
+To start the setup and collect role, the associated custom resource in the `watches.yml` has to be present. Before deploying the `cost_mgmt_cr.yaml` edit it to have your cluster ID and Reporting Operator service account token name instead of the placeholders. For example, if your cluster ID was `123a45b6-cd8e-9101-112f-g131415hi1jk` and your service account token name was `reporting-operator-token-123ab`, the `deploy/crds/cost_mgmt_cr.yaml` would look like the following:
+
+```
+---
+
+apiVersion: cost-mgmt.openshift.io/v1alpha1
+kind: CostManagement
+metadata:
+  name: cost-mgmt-setup
+spec:
+  clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
+  service_token_name: 'reporting-operator-token-123ab'
+  validate_cert: 'false'
+```
+
+Run the following to create both a CostManagement CR and a CostManagementData CR:
 
 ```
 oc create -f deploy/crds/cost_mgmt_cr.yaml
