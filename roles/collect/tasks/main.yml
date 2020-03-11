@@ -33,17 +33,17 @@
 
 - name: Set service account token name
   set_fact:
-    reporting_operator_token_name: "{{ cost_mgmt_setup.resources[0].spec.service_token_name }}"
+    reporting_operator_token_name: "{{ cost_mgmt_setup.resources[0].spec.reporting_operator_token_name }}"
   when: cost_mgmt_setup.resources
 
 - name: Check for service account token name
   debug: msg='Reporting Operator service account token name is not defined'
-  when: not token_name
+  when: not reporting_operator_token_name
 
 - name: Fail if the clusterID or service token are not defined
   fail:
-    msg: 'The cost-mgmt-setup ConfigMap requires the clusterID and service_token_name to be defined.'
-  when: not ocp_cluster_id or not token_name
+    msg: 'The cost-mgmt-setup ConfigMap requires the clusterID and reporting_operator_token_name to be defined.'
+  when: not ocp_cluster_id or not reporting_operator_token_name
 
 - name: Obtain metering api info
   k8s_info:
@@ -61,12 +61,12 @@
     api_version: v1
     kind: Secret
     namespace: "{{ namespace }}"
-    name: "{{ token_name }}"
-  register: service_token
+    name: "{{ reporting_operator_token_name }}"
+  register: reporting_token
 
 - name: Decode the service account token
   set_fact:
-    service_account_token: "{{ service_token.resources[0].data.token | b64decode }}"
+    reporting_operator_token: "{{ reporting_token.resources[0].data.token | b64decode }}"
 
 - name: Set download request facts
   set_fact:
@@ -113,7 +113,7 @@
   get_url:
     url: '{{ item }}'
     headers:
-      Authorization: "Bearer {{ service_account_token }}"
+      Authorization: "Bearer {{ reporting_operator_token }}"
     dest: '{{ collect_cluster_download_path }}/{{ collect_file_prefix }}_openshift_usage_report.{{ idx }}.{{ collect_format }}'
     validate_certs: '{{ ocp_validate_cert | bool }}'
     timeout: '{{ collect_ocp_report_timeout }}'

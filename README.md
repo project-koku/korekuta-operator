@@ -141,7 +141,7 @@ metadata:
   name: cost-mgmt-setup
 spec:
   clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
-  service_token_name: 'reporting-operator-token-123ab'
+  reporting_operator_token_name: 'reporting-operator-token-123ab'
   validate_cert: 'false'
 ```
 
