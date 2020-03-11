@@ -5,6 +5,6 @@ kind: CostManagement
 metadata:
   name: cost-mgmt-setup
 spec:
-  clusterID: CLUSTER_ID_PLACEHOLDER
-  service_token_name: REPORTING_OPERATOR_TOKEN_PLACEHOLDER
+  clusterID: 'CLUSTER_ID_PLACEHOLDER'
+  service_token_name: 'REPORTING_OPERATOR_TOKEN_PLACEHOLDER'
   validate_cert: 'false'
