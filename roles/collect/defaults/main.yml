@@ -4,6 +4,8 @@ collect_format: 'csv'
 collect_manifest_uuid: '{{ 99999999999999999999 | random | to_uuid }}'
 collect_archive_name: cost-mgmt
 ocp_validate_cert: 'true'
+ocp_cluster_id: ''
+reporting_operator_token_name: ''
 collect_reports:
   - 'cm-openshift-usage-lookback'
   - 'cm-openshift-persistentvolumeclaim-lookback'

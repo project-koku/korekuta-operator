@@ -3,4 +3,8 @@
 apiVersion: cost-mgmt.openshift.io/v1alpha1
 kind: CostManagement
 metadata:
-  name: cost-mgmt-example
+  name: cost-mgmt-setup
+spec:
+  clusterID: 'CLUSTER_ID_PLACEHOLDER'
+  reporting_operator_token_name: 'REPORTING_OPERATOR_TOKEN_PLACEHOLDER'
+  validate_cert: 'false'

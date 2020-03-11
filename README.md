@@ -55,7 +55,7 @@ Switch to the OpenShift project called `openshift-metering`:
 oc project openshift-metering
 ```
 
-Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRD:
+Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRDs:
 
 ```
 oc create -f deploy/crds/cost_mgmt_crd.yaml
@@ -71,22 +71,6 @@ Next, since we are running locally, we need to make sure that the path to the ro
   kind: CostManagement
   role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/setup
 ```
-
-Since the Operator is not scoped to the cluster, there is some information that our Operator does not have access to. For the short-term, we are going to create a ConfigMap to temporarily access the information that we need. In the OpenShift UI, under the ``openshift-metering`` namespace, click on ConfigMaps, and create a new ConfigMap named ``cost-mgmt-setup`` similar to the following:
-
-```
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: example
-  namespace: openshift-metering
-data:
-  clusterID: 315d46a7-ac9e-4253-980c-f401999dc3ae
-  service_token_name: reporting-operator-token-357akj
-  validate_cert: 'false'
-```
-
-Note: The only thing that you should have to input is the name of the ConfigMap, and the `clusterID`, `service_token_name`, and `validate_cert` values under data.
 
 Finally, run the operator locally:
 
@@ -136,16 +120,32 @@ NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 cost-mgmt-operator
 ```
 
-In order to see the logs from a particular you can run:
+In order to see the logs from the operator deployment you can run:
 
 ```
-oc logs deployment/cost-mgmt-operator
+oc logs -f deployment/cost-mgmt-operator --container ansible
+oc logs -f deployment/cost-mgmt-operator --container operator
 ```
 
 ## Kicking off the setup role
 The setup role is going to create the reports defined in `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
-To start the setup role, a CostManagement custom resource has to be present. Run the following to create a CostManagement CR:
+To start the setup and collect role, the associated custom resource in the `watches.yml` has to be present. Before deploying the `cost_mgmt_cr.yaml` edit it to have your cluster ID and Reporting Operator service account token name instead of the placeholders. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk` and your service account token name is `reporting-operator-token-123ab`, the `deploy/crds/cost_mgmt_cr.yaml` should look like the following:
+
+```
+---
+
+apiVersion: cost-mgmt.openshift.io/v1alpha1
+kind: CostManagement
+metadata:
+  name: cost-mgmt-setup
+spec:
+  clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
+  reporting_operator_token_name: 'reporting-operator-token-123ab'
+  validate_cert: 'false'
+```
+
+Run the following to create both a CostManagement CR and a CostManagementData CR:
 
 ```
 oc create -f deploy/crds/cost_mgmt_cr.yaml
