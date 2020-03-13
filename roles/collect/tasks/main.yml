@@ -10,7 +10,7 @@
 
 - name: Fail if cost-mgmt-setup does not exist
   fail:
-    msg: 'The cost-mgmt-setup ConfigMap has not been configured.'
+    msg: 'The cost-mgmt-setup custom resource has not been configured.'
   when: not cost_mgmt_setup.resources
 
 - name: Set cluster ID
@@ -42,7 +42,7 @@
 
 - name: Fail if the clusterID or service token are not defined
   fail:
-    msg: 'The cost-mgmt-setup ConfigMap requires the clusterID and reporting_operator_token_name to be defined.'
+    msg: 'The cost-mgmt-setup custom resource requires the clusterID and reporting_operator_token_name to be defined.'
   when: not ocp_cluster_id or not reporting_operator_token_name
 
 - name: Obtain metering api info
@@ -54,7 +54,8 @@
 
 - name: Set metering api route
   set_fact:
-    metering_api_route: "https://{{ metering_route.resources[0].spec.host }}/api/v1/reports/get"
+    metering_api_route: "{{ api_prefix }}{{ metering_route.resources[0].spec.host }}/api/v1/reports/get"
+  when: metering_route.resources
 
 - name: Get the service account token
   k8s_info:
@@ -67,6 +68,12 @@
 - name: Decode the service account token
   set_fact:
     reporting_operator_token: "{{ reporting_token.resources[0].data.token | b64decode }}"
+  when: reporting_token.resources
+
+- name: Fail when reporting_operator_token not defined
+  fail:
+    msg: 'Reporting Operator token does not exist'
+  when: not reporting_operator_token
 
 - name: Set download request facts
   set_fact:

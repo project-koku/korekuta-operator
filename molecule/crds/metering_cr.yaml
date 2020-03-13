@@ -1,0 +1,18 @@
+---
+
+apiVersion: metering.openshift.io/v1
+kind: MeteringConfig
+metadata:
+  generation: 1
+  name: operator-metering
+  namespace: openshift-metering
+spec:
+  storage:
+    hive:
+      s3:
+        bucket: ocpmetering/data/
+        createBucket: false
+        region: us-east-1
+        secretName: metering-aws
+      type: s3
+    type: hive

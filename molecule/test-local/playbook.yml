@@ -24,7 +24,9 @@
   connection: local
   vars:
     ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    collect_download_path: '/tmp/cost-mgmt-operator-collect'
     deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
+    molecule_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule"
     pull_policy: Never
     REPLACE_IMAGE: cost-mgmt.openshift.io/cost-mgmt-operator:testing
     custom_resource: "{{ lookup('file', '/'.join([deploy_dir,
@@ -33,10 +35,25 @@
       'crds/cost_mgmt_crd.yaml'])) | from_yaml }}"
     cm_data_crd: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_data_crd.yaml'])) | from_yaml }}"
-    metering_cr: "{{ lookup('file', '/'.join([deploy_dir,
+    cm_data_cr: "{{ lookup('file', '/'.join([deploy_dir,
+      'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
+    metering_cr: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/metering_cr.yaml'])) | from_yaml }}"
-    metering_crd: "{{ lookup('file', '/'.join([deploy_dir,
+    metering_crd: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/metering_crd.yaml'])) | from_yaml }}"
+    metering_route_cr: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/metering_route_cr.yaml'])) | from_yaml }}"
+    metering_route_crd: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/metering_route_crd.yaml'])) | from_yaml }}"
+    reporting_operator_metering_token: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/reporting_operator_token.yaml'])) | from_yaml }}"
+    test_data_csv: "{{ lookup('file', '/'.join([molecule_dir,
+      'default/files/test_data.csv'])) }}"
+    collect_delete_after: false
+    collect_max_csvfile_size: 1
+    test_paths:
+      - 'api/v1/reports'
+    api_prefix: 'http://'
   tasks:
     - block:
         - name: Delete the Operator Deployment
@@ -197,6 +214,36 @@
             namespace: '{{ namespace }}'
             definition: '{{ metering_cr }}'
 
+        - name: Create the metering route crd for testing
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ metering_route_crd }}'
+
+        - name: Create the metering route cr for testing
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ metering_route_cr }}'
+
+        - name: Create the reporting operator token secret for testing
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ reporting_operator_metering_token }}'
+
+        - name: Get the service account token
+          k8s_info:
+            api_version: v1
+            kind: Secret
+            namespace: "{{ namespace }}"
+            name: "reporting-operator-token-placeholder"
+          register: reporting_token
+
+        - name: debug cr
+          debug:
+            var: reporting_token
+
         - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement crd
           k8s:
             state: present
@@ -215,13 +262,28 @@
             definition: "{{ lookup('template',
               '/'.join([deploy_dir, 'operator.yaml'])) }}"
 
+        - name: create test webserver dir
+          file:
+            path: "/tmp/www/{{ item }}"
+            state: directory
+          with_items: "{{ test_paths }}"
+
+        - name: create test file
+          copy:
+            dest: "/tmp/www/{{ item }}/get"
+            src: 'test_data.csv'
+          with_items: "{{ test_paths }}"
+
+        - name: launch test web server
+          shell: cd /tmp/www; nohup python -m http.server 8001 </dev/null >/dev/null 2>&1 &
+
         - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement
           k8s:
             state: present
             namespace: '{{ namespace }}'
             definition: '{{ custom_resource }}'
 
-        - name: Wait 2m for reconciliation to complete
+        - name: Wait 2m for reconciliation to complete for setup
           k8s_info:
             api_version: '{{ custom_resource.apiVersion }}'
             kind: '{{ custom_resource.kind }}'
@@ -234,6 +296,49 @@
           delay: 12
           retries: 10
 
+        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ cm_data_cr }}'
+
+        - name: debug cr
+          ignore_errors: yes
+          failed_when: false
+          debug:
+            var: debug_cr
+          vars:
+            debug_cr: '{{ lookup("k8s",
+              kind=cm_data_cr.kind,
+              api_version=cm_data_cr.apiVersion,
+              namespace=namespace,
+              resource_name=cm_data_cr.metadata.name
+            )}}'
+
+        - name: Wait 2m for reconciliation to complete for collect
+          k8s_info:
+            api_version: '{{ cm_data_cr.apiVersion }}'
+            kind: '{{ cm_data_cr.kind }}'
+            namespace: '{{ namespace }}'
+            name: '{{ cm_data_cr.metadata.name }}'
+          register: cm_data_cr
+          until:
+            - "'All items completed' in
+              (cm_data_cr | json_query('resources[].status.conditions[].message'))"
+          delay: 12
+          retries: 10
+
+        - command: "ls {{ collect_download_path }}/"
+          register: dir_out
+
+        - debug: var={{item}}
+          with_items: dir_out.stdout
+
+        - name: Fail if the tarfile is not in the output
+          fail:
+            msg: 'Tarfile not created as expected'
+          when: dir_out.stdout.find("cost-mgmt.tar.gz") == -1
+
       rescue:
         - name: debug cr
           ignore_errors: yes
@@ -242,10 +347,10 @@
             var: debug_cr
           vars:
             debug_cr: '{{ lookup("k8s",
-              kind=custom_resource.kind,
-              api_version=custom_resource.apiVersion,
+              kind=cm_data_cr.kind,
+              api_version=cm_data_cr.apiVersion,
               namespace=namespace,
-              resource_name=custom_resource.metadata.name
+              resource_name=cm_data_cr.metadata.name
             )}}'
 
         - name: debug cost-mgmt lookup
