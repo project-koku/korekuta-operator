@@ -328,17 +328,6 @@
           delay: 12
           retries: 10
 
-        - command: "ls {{ collect_download_path }}/"
-          register: dir_out
-
-        - debug: var={{item}}
-          with_items: dir_out.stdout
-
-        - name: Fail if the tarfile is not in the output
-          fail:
-            msg: 'Tarfile not created as expected'
-          when: dir_out.stdout.find("cost-mgmt.tar.gz") == -1
-
       rescue:
         - name: debug cr
           ignore_errors: yes
