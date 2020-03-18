@@ -8,4 +8,4 @@ metadata:
   name: metering
   namespace: openshift-metering
 spec:
-  host: localhost:8001
+  host: localhost:4443

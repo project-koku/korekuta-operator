@@ -9,6 +9,8 @@ molecule = {extras = ["docker"],version = ">=3.0"}
 flake8 = ">=3.7"
 pylint = ">=2.4"
 pyyaml = ">=5.3"
+testinfra = ">=4.0.0"
+pytest= ">2.9.1"
 
 [packages]
 ansible = ">=2.7"

@@ -19,12 +19,26 @@
         (prev_hash.stdout and prev_hash.stdout
         not in ''.join(build_cmd.stdout_lines[-2:]))
 
-- name: Converge
+    - name: copy test_data file to k8s container
+      copy:
+        dest: "/tmp/get"
+        src: 'test_data.csv'
+
+    - name: copy test_server file to k8s container
+      copy:
+        dest: "/tmp/test_server.py"
+        src: 'test_server.py'
+
+    - name: copy test_server pem file to k8s container
+      copy:
+        dest: "/tmp/test_server.pem"
+        src: 'test_server.pem'
+
+- name: Converge on setup
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: '{{ ansible_playbook_python }}'
-    collect_download_path: '/tmp/cost-mgmt-operator-collect'
     deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
     molecule_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule"
     pull_policy: Never
@@ -47,13 +61,6 @@
       'crds/metering_route_crd.yaml'])) | from_yaml }}"
     reporting_operator_metering_token: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/reporting_operator_token.yaml'])) | from_yaml }}"
-    test_data_csv: "{{ lookup('file', '/'.join([molecule_dir,
-      'default/files/test_data.csv'])) }}"
-    collect_delete_after: false
-    collect_max_csvfile_size: 1
-    test_paths:
-      - 'api/v1/reports'
-    api_prefix: 'http://'
   tasks:
     - block:
         - name: Delete the Operator Deployment
@@ -80,6 +87,27 @@
           retries: 10
           when: delete_deployment.changed
 
+        - name: Create the Operator Deployment
+          k8s:
+            namespace: '{{ namespace }}'
+            definition: "{{ lookup('template', '/'.join([deploy_dir, 'operator.yaml'])) }}"
+
+        - name: find the containerID
+          command: docker ps -aqf "ancestor=cost-mgmt.openshift.io/cost-mgmt-operator:testing"
+          register: container_id
+
+        - name: debug containerID
+          debug:
+            var: container_id
+
+        - name: Get existing image hash
+          command: docker images -q cost-mgmt.openshift.io/cost-mgmt-operator:testing
+          register: prev_hash
+
+        - name: debug image hash
+          debug:
+            var: prev_hash
+
         - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement crd
           k8s:
             state: present
@@ -91,12 +119,6 @@
             state: present
             namespace: '{{ namespace }}'
             definition: '{{ cm_data_crd }}'
-
-        - name: Create the Operator Deployment
-          k8s:
-            namespace: '{{ namespace }}'
-            definition: "{{ lookup('template',
-              '/'.join([deploy_dir, 'operator.yaml'])) }}"
 
         - name: Create the metering namespace
           k8s:
@@ -195,6 +217,15 @@
           retries: 10
           when: delete_deployment.changed
 
+        - name: Create the Operator Deployment
+          k8s:
+            namespace: '{{ namespace }}'
+            definition: "{{ lookup('template', '/'.join([deploy_dir, 'operator.yaml'])) }}"
+
+        - name: find the containerID
+          command: docker ps -aqf "ancestor=cost-mgmt.openshift.io/cost-mgmt-operator:testing"
+          register: container_id
+
         - name: Create the metering namespace
           k8s:
             api_version: v1
@@ -256,27 +287,6 @@
             namespace: '{{ namespace }}'
             definition: '{{ cm_data_crd }}'
 
-        - name: Create the Operator Deployment
-          k8s:
-            namespace: '{{ namespace }}'
-            definition: "{{ lookup('template',
-              '/'.join([deploy_dir, 'operator.yaml'])) }}"
-
-        - name: create test webserver dir
-          file:
-            path: "/tmp/www/{{ item }}"
-            state: directory
-          with_items: "{{ test_paths }}"
-
-        - name: create test file
-          copy:
-            dest: "/tmp/www/{{ item }}/get"
-            src: 'test_data.csv'
-          with_items: "{{ test_paths }}"
-
-        - name: launch test web server
-          shell: cd /tmp/www; nohup python -m http.server 8001 </dev/null >/dev/null 2>&1 &
-
         - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement
           k8s:
             state: present
@@ -293,38 +303,6 @@
           until:
             - "'All items completed' in
               (cr | json_query('resources[].status.conditions[].message'))"
-          delay: 12
-          retries: 10
-
-        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData
-          k8s:
-            state: present
-            namespace: '{{ namespace }}'
-            definition: '{{ cm_data_cr }}'
-
-        - name: debug cr
-          ignore_errors: yes
-          failed_when: false
-          debug:
-            var: debug_cr
-          vars:
-            debug_cr: '{{ lookup("k8s",
-              kind=cm_data_cr.kind,
-              api_version=cm_data_cr.apiVersion,
-              namespace=namespace,
-              resource_name=cm_data_cr.metadata.name
-            )}}'
-
-        - name: Wait 2m for reconciliation to complete for collect
-          k8s_info:
-            api_version: '{{ cm_data_cr.apiVersion }}'
-            kind: '{{ cm_data_cr.kind }}'
-            namespace: '{{ namespace }}'
-            name: '{{ cm_data_cr.metadata.name }}'
-          register: cm_data_cr
-          until:
-            - "'All items completed' in
-              (cm_data_cr | json_query('resources[].status.conditions[].message'))"
           delay: 12
           retries: 10
 
@@ -372,5 +350,160 @@
         - fail:
             msg: "Failed on action: converge"
 
+- name: Start server on Operator container
+  hosts: k8s
+  tasks:
+    - name: find the containerID
+      command: docker ps -aqf "ancestor=cost-mgmt.openshift.io/cost-mgmt-operator:testing"
+      register: container_id
+
+    - name: debug containerID
+      debug:
+        var: container_id
+
+    - name: find the container name
+      command: docker ps --format \{\{'.Names'\}\} -f id="{{ container_id.stdout_lines[0] }}"
+      register: container_name
+
+    - name: debug container name
+      debug:
+        var: container_name
+
+    - name: Store container_name in variable
+      set_fact:
+        containerName: "{{ container_name.stdout_lines[0] | replace('\n', '')}}"
+
+    - name: Execute commands in docker container
+      command: docker exec -i "{{ containerName }}" bash -c 'echo "Hello1"; echo "Hello2"'
+
+    - name: create webserver dirs
+      command: docker exec -d "{{ containerName }}" bash -c 'mkdir /tmp/www'
+
+    - name: create webserver dirs
+      command: docker exec -d "{{ containerName }}" bash -c 'mkdir /tmp/www/api'
+
+    - name: create webserver dirs
+      command: docker exec -d "{{ containerName }}" bash -c 'mkdir /tmp/www/api/v1'
+
+    - name: create webserver dirs
+      command: docker exec -d "{{ containerName }}" bash -c 'mkdir /tmp/www/api/v1/reports'
+
+    - name: copy test file to container
+      command: docker cp /tmp/get "{{ container_id.stdout_lines[0] }}":/tmp/www/api/v1/reports/get
+      ignore_errors: true
+
+    - name: copy test server to container
+      command: docker cp /tmp/test_server.py "{{ container_id.stdout_lines[0] }}":/tmp/www/test_server.py
+      ignore_errors: true
+
+    - name: copy test server pem to container
+      command: docker cp /tmp/test_server.pem "{{ container_id.stdout_lines[0] }}":/tmp/www/test_server.pem
+      ignore_errors: true
+
+    - name: start server
+      command: docker exec -i "{{ containerName }}" bash -c 'cd /tmp/www; nohup python3 test_server.py </dev/null >/dev/null 2>&1 &'
+
+- name: Converge for collect
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
+    cm_data_cr: "{{ lookup('file', '/'.join([deploy_dir,
+      'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
+  tasks:
+    - block:
+        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ cm_data_cr }}'
+
+        - name: debug cost-mgmt data custom resource
+          ignore_errors: yes
+          failed_when: false
+          debug:
+            var: debug_cr
+          vars:
+            debug_cr: '{{ lookup("k8s",
+              kind=cm_data_cr.kind,
+              api_version=cm_data_cr.apiVersion,
+              namespace=namespace,
+              resource_name=cm_data_cr.metadata.name
+            )}}'
+
+        - name: Wait 2m for reconciliation to complete for collect
+          k8s_info:
+            api_version: '{{ cm_data_cr.apiVersion }}'
+            kind: '{{ cm_data_cr.kind }}'
+            namespace: '{{ namespace }}'
+            name: '{{ cm_data_cr.metadata.name }}'
+          register: cm_data_cr
+          until:
+            - "'Successful' in (cm_data_cr |
+              json_query('resources[].status.conditions[].reason'))"
+          delay: 12
+          retries: 10
+
+      rescue:
+        - name: debug cr
+          ignore_errors: yes
+          failed_when: false
+          debug:
+            var: debug_cr
+          vars:
+            debug_cr: '{{ lookup("k8s",
+              kind=cm_data_cr.kind,
+              api_version=cm_data_cr.apiVersion,
+              namespace=namespace,
+              resource_name=cm_data_cr.metadata.name
+            )}}'
+
+        - name: debug cost-mgmt lookup
+          ignore_errors: yes
+          failed_when: false
+          debug:
+            var: deploy
+          vars:
+            deploy: '{{ lookup("k8s",
+              kind="Deployment",
+              api_version="apps/v1",
+              namespace=namespace,
+              label_selector="app=cost-mgmt"
+            )}}'
+
+        - name: get operator logs
+          ignore_errors: yes
+          failed_when: false
+          command: kubectl logs
+            deployment/{{ definition.metadata.name }} -n {{ namespace }}
+          environment:
+            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
+          vars:
+            definition: "{{ lookup('template',
+              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
+          register: log
+
+        - debug: var=log.stdout_lines
+
+        - fail:
+            msg: "Failed on action: converge"
+
+- name: Copy tar.gz to k8s from Operator
+  hosts: k8s
+  tasks:
+    - name: find the containerID
+      command: docker ps -aqf "ancestor=cost-mgmt.openshift.io/cost-mgmt-operator:testing"
+      register: container_id
+
+    - name: Copy tar.gz.file from operator container to k8s container
+      command: docker cp "{{ container_id.stdout_lines[0] }}":/tmp/cost-mgmt-operator-collect/cost-mgmt.tar.gz cost.tar.gz
+
+- name: Copy cost-mgmt.tar.gz from k8s to localhost
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Copy tar.gz.file to tmp
+      shell: docker cp kind-test-local:cost.tar.gz /tmp/
 
 - import_playbook: '{{ playbook_dir }}/../default/asserts.yml'

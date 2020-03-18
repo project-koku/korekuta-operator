@@ -10,6 +10,8 @@
     custom_resource: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_cr.yaml'])) | from_yaml
     }}"
+    cm_data_cr: "{{ lookup('file', '/'.join([deploy_dir,
+      'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
   tasks:
     - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement
       k8s:
@@ -35,6 +37,38 @@
       register: reconcile_cr
       until:
         - "'Successful' in (reconcile_cr |
+          json_query('resources[].status.conditions[].reason'))"
+      delay: 12
+      retries: 10
+
+    - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData
+      k8s:
+        state: present
+        namespace: '{{ namespace }}'
+        definition: '{{ cm_data_cr }}'
+
+    - name: debug cost-mgmt data custom resource
+      ignore_errors: yes
+      failed_when: false
+      debug:
+        var: debug_cr
+      vars:
+        debug_cr: '{{ lookup("k8s",
+          kind=cm_data_cr.kind,
+          api_version=cm_data_cr.apiVersion,
+          namespace=namespace,
+          resource_name=cm_data_cr.metadata.name
+        )}}'
+
+    - name: Wait 2m for reconciliation to complete for collect
+      k8s_info:
+        api_version: '{{ cm_data_cr.apiVersion }}'
+        kind: '{{ cm_data_cr.kind }}'
+        namespace: '{{ namespace }}'
+        name: '{{ cm_data_cr.metadata.name }}'
+      register: cm_data_cr
+      until:
+        - "'Successful' in (cm_data_cr |
           json_query('resources[].status.conditions[].reason'))"
       delay: 12
       retries: 10
