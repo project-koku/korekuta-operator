@@ -1,0 +1,11 @@
+---
+
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  annotations:
+    openshift.io/host.generated: 'true'
+  name: metering
+  namespace: openshift-metering
+spec:
+  host: localhost:4443

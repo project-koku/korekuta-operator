@@ -1,0 +1,13 @@
+---
+
+kind: Secret
+apiVersion: v1
+metadata:
+  name: reporting-operator-token-placeholder
+  namespace: openshift-metering
+  annotations:
+    kubernetes.io/service-account.name: reporting-operator
+data:
+  token: >-
+    Zm9v
+# type: kubernetes.io/service-account-token
