@@ -25,12 +25,23 @@ spec:
           required:
             - clusterID
             - reporting_operator_token_name
+            - authentication_secret_name
           properties:
             clusterID:
               type: string
             reporting_operator_token_name:
               type: string
             validate_cert:
+              type: string
+            ingress_url:
+              type: string
+            authentication:
+              type: string
+              enum: [
+                'token',
+                'basic'
+              ]
+            authentication_secret_name:
               type: string
   versions:
     - name: v1alpha1

@@ -15,3 +15,11 @@ collect_delete_after: 'true'
 collect_ocp_report_timeout: 60
 collect_max_csvfile_size: 99
 api_prefix: 'https://'
+ingress_url: 'https://cloud.redhat.com/api/ingress/v1/upload'
+authentication: 'token'
+authentication_token: ''
+username: ''
+password: ''
+cacert_path: '/var/run/configmaps/trusted-ca-bundle/ca-bundle.crt'
+# cacert_path: '/etc/ssl/'
+trusted_bundle_name: 'trusted-ca-bundle'

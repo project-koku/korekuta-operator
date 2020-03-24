@@ -65,6 +65,48 @@
     name: "{{ reporting_operator_token_name }}"
   register: reporting_token
 
+- name: Set authentication_secret name
+  set_fact:
+    authentication_secret_name: "{{ cost_mgmt_setup.resources[0].spec.authentication_secret_name }}"
+  when: cost_mgmt_setup.resources
+
+- name: debug auth secret name
+  debug:
+    var: authentication_secret_name
+
+- name: Set the authentication method
+  set_fact:
+    authentication: "{{ cost_mgmt_setup.resources[0].spec.authentication }}"
+  when: cost_mgmt_setup.resources
+  ignore_errors: true
+
+- name: debug auth method
+  debug:
+    var: authentication
+
+- name: Set the ingress URL
+  set_fact:
+    ingress_url: "{{ cost_mgmt_setup.resources[0].spec.ingress_url }}"
+  when: cost_mgmt_setup.resources
+  ignore_errors: true
+
+- name: debug ingress URL
+  debug:
+    var: ingress_url
+
+- name: Fail if auth secret is not set
+  fail:
+    msg: 'The cost-mgmt-setup custom resource requires the authentication_secret_name to be defined.'
+  when: not authentication_secret_name
+
+- name: Get the authentication secret
+  k8s_info:
+    api_version: v1
+    kind: Secret
+    namespace: "{{ namespace }}"
+    name: "{{ authentication_secret_name }}"
+  register: authentication_secret
+
 - name: Decode the service account token
   set_fact:
     reporting_operator_token: "{{ reporting_token.resources[0].data.token | b64decode }}"
@@ -75,11 +117,27 @@
     msg: 'Reporting Operator token does not exist'
   when: not reporting_operator_token
 
-- name: Set download request facts
+- name: Get the trusted-ca-bundle
+  k8s_info:
+    api_version: v1
+    kind: ConfigMap
+    namespace: "{{ namespace }}"
+    name: "{{ trusted_bundle_name }}"
+  register: trusted_ca_bundle
+
+- name: Set the trusted-ca-bundle contents
   set_fact:
-    collect_file_prefix: '{{ collect_manifest_uuid }}'
-    format: "&format={{ collect_format }}"
-    namespace: "&namespace={{ namespace }}"
+    trusted_ca_bundle_contents: "{{ trusted_ca_bundle.resources[0].data['ca-bundle.crt'] }}"
+  when: trusted_ca_bundle.resources
+
+# - name: Write the trusted-ca-bundle contents to a file
+#   copy: content="{{ trusted_ca_bundle_contents }}" dest="{{ cacert_path }}ca-bundle.crt"
+
+# - name: Set download request facts
+#   set_fact:
+#     collect_file_prefix: '{{ collect_manifest_uuid }}'
+#     format: "&format={{ collect_format }}"
+#     namespace: "&namespace={{ namespace }}"
 
 # getting a little clever to build lists to append into
 - name: initialize fact lists
@@ -129,10 +187,18 @@
     index_var: idx
   register: download_result
 
+- name: debug download result
+  debug:
+    var: download_result
+
 - name: append filename to fact list
   set_fact:
     csv_files: "{{ csv_files + [item.dest | basename] }}"
   with_items: "{{ download_result.results }}"
+
+- name: debug csv_files
+  debug:
+    var: csv_files
 
 - name: Check that required files exist
   stat:
@@ -141,15 +207,91 @@
   with_items:
     - '{{ csv_files }}'
 
-- name: Check for empty download results
-  fail:
-    msg: 'Downloaded file {{ item }} has no content or could not be found: {{ item.stat }}.'
-  when: not item.stat.exists or (item.stat.exists and item.stat.size <= 0)
-  with_items:
-    - '{{ csv_stat_result.results }}'
+- name: debug the csv_stat_result
+  debug:
+    var: csv_stat_result
+
+# - name: Check for empty download results
+#   fail:
+#     msg: 'Downloaded file {{ item }} has no content or could not be found: {{ item.stat }}.'
+#   when: not item.stat.exists or (item.stat.exists and item.stat.size <= 0)
+#   with_items:
+#     - '{{ csv_stat_result.results }}'
 
 - name: Run packaging script to prepare reports for sending to Insights
   script: package_report.py --filepath {{ ocp_cluster_id }} --max-size {{ collect_max_csvfile_size }} --ocp-cluster-id {{ ocp_cluster_id }} --overwrite
   args:
     chdir: '{{ collect_download_path }}'
   register: packaged_reports
+
+- name: Fail if the authentication secret could not be found
+  fail:
+    msg: 'The authentication secret could not be found.'
+  when: not authentication_secret.resources
+
+- name: If authentication is set to token, get the auth token
+  set_fact:
+    authentication_token: "{{ authentication_secret.resources[0].data.token | b64decode }}"
+  when: authentication_secret.resources and authentication == 'token'
+
+- name: If authentication is set to basic then grab username and password
+  set_fact:
+    username: "{{ authentication_secret.resources[0].data.username | b64decode }}"
+    password: "{{ authentication_secret.resources[0].data.password | b64decode }}"
+  when: authentication_secret.resources and authentication == 'basic'
+
+- name: Fail if no token but token is specified
+  fail:
+    msg: 'The authentication method was set to token but the authentication secret did not contain a token.'
+  when: authentication == 'token' and not authentication_token
+
+- name: Fail if no username but basic authentication is specified
+  fail:
+    msg: 'The authentication method was set to basic but the authentication secret did not contain a username.'
+  when: authentication == 'basic' and not username
+
+- name: Fail if no password but basic authentication is specified
+  fail:
+    msg: 'The authentication method was set to basic but the authentication secret did not contain a password.'
+  when: authentication == 'basic' and not password
+
+- name: Check if cert file exists
+  stat:
+    path: "{{ cacert_path }}"
+  register: trusted_cert
+
+- name: debug the trusted cert
+  debug:
+    var: trusted_cert
+
+- name: Fail if the trusted cert does not exist
+  fail:
+    msg: 'Failing because the ssl certificate does not exist.'
+  when: not trusted_cert
+
+# - name: Upload the cost report to ingress
+#   uri:
+#     url: "{{ ingress_url }}"
+#     user: 'abaiken'
+#     password: 'redhat'
+#     force_basic_auth: yes
+#     body: "file=@cost-mgmt.tar.gz"
+#     method: POST
+#     # src: "{{ collect_download_path }}/cost-mgmt.tar.gz"
+#     headers:
+#     #     file: "@{{ collect_download_path }}/cost-mgmt.tar.gz"
+#         type: "application/vnd.redhat.hccm.tar+tgz"
+#     status_code: 202
+#     validate_certs: no
+
+- name: Upload the cost report to ingress using basic auth
+  shell:
+    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -u {{ username }}:{{ password }} --cacert {{ cacert_path }}'
+    chdir: '{{ collect_download_path }}'
+  when: authentication == 'basic'
+
+- name: Upload the cost report to ingress using token auth
+  shell:
+    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" --cacert {{ cacert_path }}'
+    chdir: '{{ collect_download_path }}'
+  when: authentication == 'token'

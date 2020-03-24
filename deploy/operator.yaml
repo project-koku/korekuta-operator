@@ -38,6 +38,9 @@ spec:
               name: runner
             - mountPath: /tmp/cost-mgmt-operator-collect
               name: cost-mgmt-operator
+            - mountPath: /var/run/configmaps/trusted-ca-bundle
+              name: trusted-ca-volume
+              readOnly: true
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
@@ -55,6 +58,9 @@ spec:
         - name: runner
           emptyDir: {}
         - name: cost-mgmt-operator
+        - name: trusted-ca-volume
+          configMap:
+            name: trusted-ca-bundle
   volumeClaimTemplates:
     - metadata:
         name: cost-mgmt-operator
