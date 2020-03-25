@@ -1,6 +1,7 @@
 # korekuta-operator
 
 ## About
+
 Operator to obtain OCP usage data and upload it to koku. The operator utilizes [ansible](https://www.ansible.com/) to collect usage data from an OCP cluster installation.
 
 You must have access to an OpenShift v.4.3.0+ cluster..
@@ -46,8 +47,7 @@ We utilize [molecule](https://molecule.readthedocs.io/en/latest/) to test the an
 ```
 make test-local
 ```
-
-## Building & running the operator outside of a cluster
+## Setup for running the Operator
 
 Switch to the OpenShift project called `openshift-metering`:
 
@@ -55,14 +55,22 @@ Switch to the OpenShift project called `openshift-metering`:
 oc project openshift-metering
 ```
 
-Although we are not going to run as a pod inside the cluster, OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRDs:
+OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRDs:
 
 ```
 oc create -f deploy/crds/cost_mgmt_crd.yaml
 oc create -f deploy/crds/cost_mgmt_data_crd.yaml
 ```
 
-Next, since we are running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the setup role in the current repository:
+We also need to deploy the ConfigMap containing the certificate authority chain for ssl verification when uploading the cost reports to ingress. This must be done before deploying the Operator because it is consumed through a volume:
+
+```
+oc create -f deploy/crds/trusted_ca_certmap.yaml
+```
+
+## Building & running the operator outside of a cluster
+
+When running locally, we need to make sure that the path to the role in the `watches.yaml` points to an existing path on our local machine. Edit the `watches.yaml` to contain the absolute path to the setup and collect roles in the current repository:
 
 ```
 # initial setup steps
@@ -70,6 +78,13 @@ Next, since we are running locally, we need to make sure that the path to the ro
   group: cost-mgmt.openshift.io
   kind: CostManagement
   role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/setup
+
+# collect the reports
+- version: v1alpha1
+  group: cost-mgmt-data.openshift.io
+  kind: CostManagementData
+  role: /ABSOLUTE_PATH_TO/korekuta-operator/roles/collect
+  reconcilePeriod: 360m
 ```
 
 Finally, run the operator locally:
@@ -127,7 +142,8 @@ oc logs -f deployment/cost-mgmt-operator --container ansible
 oc logs -f deployment/cost-mgmt-operator --container operator
 ```
 
-## Kicking off the setup role
+## Kicking off the roles
+
 The setup role is going to create the reports defined in `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
 To start the setup and collect role, the associated custom resource in the `watches.yml` has to be present. Before deploying the `cost_mgmt_cr.yaml` edit it to have your cluster ID and Reporting Operator service account token name instead of the placeholders. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk` and your service account token name is `reporting-operator-token-123ab`, the `deploy/crds/cost_mgmt_cr.yaml` should look like the following:
@@ -143,6 +159,12 @@ spec:
   clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
   reporting_operator_token_name: 'reporting-operator-token-123ab'
   validate_cert: 'false'
+```
+
+Note: You can also specify that you want to upload using ``basic`` authentication inside of the CostManagement CR. If you specify basic authentication, you must edit the authentication secret at ``deploy/crds/authentication_secret.yaml`` to have your base64 encoded username and password for uploading to production. Then deploy the authentication secret using the following:
+
+```
+oc create -f deploy/crds/authentication_secret.yaml
 ```
 
 Run the following to create both a CostManagement CR and a CostManagementData CR:
@@ -182,6 +204,7 @@ After testing, you can cleanup the resources using the following:
 ```
 oc delete -f deploy/crds/cost_mgmt_cr.yaml
 oc delete -f deploy/crds/cost_mgmt_crd.yaml
+oc delete -f deploy/crds/trusted_ca_certmap.yaml
 oc delete -f deploy/operator.yaml
 oc delete -f deploy/role_binding.yaml
 oc delete -f deploy/role.yaml
