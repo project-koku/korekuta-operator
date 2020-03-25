@@ -24,15 +24,20 @@
         dest: "/tmp/get"
         src: 'test_data.csv'
 
-    - name: copy test_server file to k8s container
+    - name: copy mock_reporting_api server to k8s container
       copy:
-        dest: "/tmp/test_server.py"
-        src: 'test_server.py'
+        dest: "/tmp/mock_reporting_api.py"
+        src: 'mock_reporting_api.py'
 
-    - name: copy test_server pem file to k8s container
+    - name: copy mock_reporting_api pem file to k8s container
       copy:
-        dest: "/tmp/test_server.pem"
-        src: 'test_server.pem'
+        dest: "/tmp/mock_reporting_api.pem"
+        src: 'mock_reporting_api.pem'
+
+    - name: copy mock_ingress_server file to k8s container
+      copy:
+        dest: "/tmp/mock_ingress_server.py"
+        src: 'mock_ingress_server.py'
 
 - name: Converge on setup
   hosts: localhost
@@ -43,13 +48,13 @@
     molecule_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule"
     pull_policy: Never
     REPLACE_IMAGE: cost-mgmt.openshift.io/cost-mgmt-operator:testing
-    custom_resource: "{{ lookup('file', '/'.join([deploy_dir,
+    cm_cr: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/cost_mgmt_cr.yaml'])) | from_yaml }}"
     cm_crd: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_crd.yaml'])) | from_yaml }}"
     cm_data_crd: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_data_crd.yaml'])) | from_yaml }}"
-    cm_data_cr: "{{ lookup('file', '/'.join([deploy_dir,
+    cm_data_cr: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
     metering_cr: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/metering_cr.yaml'])) | from_yaml }}"
@@ -61,6 +66,8 @@
       'crds/metering_route_crd.yaml'])) | from_yaml }}"
     reporting_operator_metering_token: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/reporting_operator_token.yaml'])) | from_yaml }}"
+    trusted_ca_config: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/trusted_ca_certmap.yaml'])) | from_yaml }}"
   tasks:
     - block:
         - name: Delete the Operator Deployment
@@ -120,6 +127,12 @@
             namespace: '{{ namespace }}'
             definition: '{{ cm_data_crd }}'
 
+        - name: Create the trusted cert ConfigMap
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ trusted_ca_config }}'
+
         - name: Create the metering namespace
           k8s:
             api_version: v1
@@ -131,14 +144,14 @@
           k8s:
             state: present
             namespace: '{{ namespace }}'
-            definition: '{{ custom_resource }}'
+            definition: '{{ cm_cr }}'
 
         - name: Wait 2m for reconciliation to fail due to openshift metering not being configured
           k8s_info:
-            api_version: '{{ custom_resource.apiVersion }}'
-            kind: '{{ custom_resource.kind }}'
+            api_version: '{{ cm_cr.apiVersion }}'
+            kind: '{{ cm_cr.kind }}'
             namespace: '{{ namespace }}'
-            name: '{{ custom_resource.metadata.name }}'
+            name: '{{ cm_cr.metadata.name }}'
           register: cr
           until:
             - "'Failed' in
@@ -156,10 +169,10 @@
             var: debug_cr
           vars:
             debug_cr: '{{ lookup("k8s",
-              kind=custom_resource.kind,
-              api_version=custom_resource.apiVersion,
+              kind=cm_cr.kind,
+              api_version=cm_cr.apiVersion,
               namespace=namespace,
-              resource_name=custom_resource.metadata.name
+              resource_name=cm_cr.metadata.name
             )}}'
 
         - name: debug cost-mgmt lookup
@@ -216,6 +229,12 @@
           delay: 3
           retries: 10
           when: delete_deployment.changed
+
+        - name: Create the trusted cert ConfigMap
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ trusted_ca_config }}'
 
         - name: Create the Operator Deployment
           k8s:
@@ -291,14 +310,14 @@
           k8s:
             state: present
             namespace: '{{ namespace }}'
-            definition: '{{ custom_resource }}'
+            definition: '{{ cm_cr }}'
 
         - name: Wait 2m for reconciliation to complete for setup
           k8s_info:
-            api_version: '{{ custom_resource.apiVersion }}'
-            kind: '{{ custom_resource.kind }}'
+            api_version: '{{ cm_cr.apiVersion }}'
+            kind: '{{ cm_cr.kind }}'
             namespace: '{{ namespace }}'
-            name: '{{ custom_resource.metadata.name }}'
+            name: '{{ cm_cr.metadata.name }}'
           register: cr
           until:
             - "'All items completed' in
@@ -393,15 +412,22 @@
       ignore_errors: true
 
     - name: copy test server to container
-      command: docker cp /tmp/test_server.py "{{ container_id.stdout_lines[0] }}":/tmp/www/test_server.py
+      command: docker cp /tmp/mock_reporting_api.py "{{ container_id.stdout_lines[0] }}":/tmp/www/mock_reporting_api.py
       ignore_errors: true
 
     - name: copy test server pem to container
-      command: docker cp /tmp/test_server.pem "{{ container_id.stdout_lines[0] }}":/tmp/www/test_server.pem
+      command: docker cp /tmp/mock_reporting_api.pem "{{ container_id.stdout_lines[0] }}":/tmp/www/mock_reporting_api.pem
       ignore_errors: true
 
     - name: start server
-      command: docker exec -i "{{ containerName }}" bash -c 'cd /tmp/www; nohup python3 test_server.py </dev/null >/dev/null 2>&1 &'
+      command: docker exec -i "{{ containerName }}" bash -c 'cd /tmp/www; nohup python3 mock_reporting_api.py </dev/null >/dev/null 2>&1 &'
+
+    - name: copy test server2 to container
+      command: docker cp /tmp/mock_ingress_server.py "{{ container_id.stdout_lines[0] }}":/tmp/www/mock_ingress_server.py
+      ignore_errors: true
+
+    - name: start server
+      command: docker exec -i "{{ containerName }}" bash -c 'cd /tmp/www; nohup python3 mock_ingress_server.py </dev/null >/dev/null 2>&1 &'
 
 - name: Converge for collect
   hosts: localhost
@@ -411,8 +437,17 @@
     deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
     cm_data_cr: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
+    authentication_secret: "{{ lookup('file', '/'.join([deploy_dir,
+      'crds/authentication_secret.yaml'])) | from_yaml }}"
+    REPLACE_IMAGE: cost-mgmt.openshift.io/cost-mgmt-operator:testing
   tasks:
     - block:
+        - name: Create the authentication Secret
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ authentication_secret }}'
+
         - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData
           k8s:
             state: present

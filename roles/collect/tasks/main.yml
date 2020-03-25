@@ -130,14 +130,11 @@
     trusted_ca_bundle_contents: "{{ trusted_ca_bundle.resources[0].data['ca-bundle.crt'] }}"
   when: trusted_ca_bundle.resources
 
-# - name: Write the trusted-ca-bundle contents to a file
-#   copy: content="{{ trusted_ca_bundle_contents }}" dest="{{ cacert_path }}ca-bundle.crt"
-
-# - name: Set download request facts
-#   set_fact:
-#     collect_file_prefix: '{{ collect_manifest_uuid }}'
-#     format: "&format={{ collect_format }}"
-#     namespace: "&namespace={{ namespace }}"
+- name: Set download request facts
+  set_fact:
+    collect_file_prefix: '{{ collect_manifest_uuid }}'
+    format: "&format={{ collect_format }}"
+    namespace: "&namespace={{ namespace }}"
 
 # getting a little clever to build lists to append into
 - name: initialize fact lists
@@ -211,12 +208,12 @@
   debug:
     var: csv_stat_result
 
-# - name: Check for empty download results
-#   fail:
-#     msg: 'Downloaded file {{ item }} has no content or could not be found: {{ item.stat }}.'
-#   when: not item.stat.exists or (item.stat.exists and item.stat.size <= 0)
-#   with_items:
-#     - '{{ csv_stat_result.results }}'
+- name: Check for empty download results
+  fail:
+    msg: 'Downloaded file {{ item }} has no content or could not be found: {{ item.stat }}.'
+  when: not item.stat.exists or (item.stat.exists and item.stat.size <= 0)
+  with_items:
+    - '{{ csv_stat_result.results }}'
 
 - name: Run packaging script to prepare reports for sending to Insights
   script: package_report.py --filepath {{ ocp_cluster_id }} --max-size {{ collect_max_csvfile_size }} --ocp-cluster-id {{ ocp_cluster_id }} --overwrite
@@ -279,7 +276,7 @@
 #     method: POST
 #     # src: "{{ collect_download_path }}/cost-mgmt.tar.gz"
 #     headers:
-#     #     file: "@{{ collect_download_path }}/cost-mgmt.tar.gz"
+#         file: "@{{ collect_download_path }}/cost-mgmt.tar.gz"
 #         type: "application/vnd.redhat.hccm.tar+tgz"
 #     status_code: 202
 #     validate_certs: no

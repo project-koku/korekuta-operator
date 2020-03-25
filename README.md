@@ -146,7 +146,7 @@ oc logs -f deployment/cost-mgmt-operator --container operator
 
 The setup role is going to create the reports defined in `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
-To start the setup and collect role, the associated custom resource in the `watches.yml` has to be present. Before deploying the `cost_mgmt_cr.yaml` edit it to have your cluster ID and Reporting Operator service account token name instead of the placeholders. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk` and your service account token name is `reporting-operator-token-123ab`, the `deploy/crds/cost_mgmt_cr.yaml` should look like the following:
+To start the setup and collect role, the associated custom resource in the `watches.yml` has to be present. Before deploying the `cost_mgmt_cr.yaml` edit it to have your cluster ID and Reporting Operator service account token name instead of the placeholders. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your service account token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `deploy/crds/cost_mgmt_cr.yaml` should look like the following:
 
 ```
 ---
@@ -159,9 +159,11 @@ spec:
   clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
   reporting_operator_token_name: 'reporting-operator-token-123ab'
   validate_cert: 'false'
+  authentication: 'basic'
+  authentication_secret_name: 'basic_auth_creds-123ab'
 ```
 
-Note: You can also specify that you want to upload using ``basic`` authentication inside of the CostManagement CR. If you specify basic authentication, you must edit the authentication secret at ``deploy/crds/authentication_secret.yaml`` to have your base64 encoded username and password for uploading to production. Then deploy the authentication secret using the following:
+Note: You can also specify the `ingress_url` inside ofthe CostManagement CR. This will allow you to upload to different environments. When you specify that you want to use ``basic`` authentication inside of the CostManagement CR you must deploy the authentication secret that holds your base64 encoded username and password. Feel free to use the authentication secret template at ``deploy/crds/authentication_secret.yaml`` but make sure that you edit the name to match the `authentication_secret_name` inside of the CostManagement CR. Then deploy the authentication secret using the following:
 
 ```
 oc create -f deploy/crds/authentication_secret.yaml
@@ -205,6 +207,7 @@ After testing, you can cleanup the resources using the following:
 oc delete -f deploy/crds/cost_mgmt_cr.yaml
 oc delete -f deploy/crds/cost_mgmt_crd.yaml
 oc delete -f deploy/crds/trusted_ca_certmap.yaml
+oc delete -f deploy/crds/authentication_secret.yaml
 oc delete -f deploy/operator.yaml
 oc delete -f deploy/role_binding.yaml
 oc delete -f deploy/role.yaml
