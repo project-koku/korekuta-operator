@@ -1,0 +1,12 @@
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: trusted-ca-bundle
+  namespace: openshift-metering
+  annotations:
+    kubernetes.io/service-account.name: reporting-operator
+data:
+  ca-bundle.crt: >-
+    Zm9v
