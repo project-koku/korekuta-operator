@@ -137,7 +137,7 @@
 
 - name: If authentication is set to token, get the auth token
   set_fact:
-    authentication_token: "{{ authentication_secret.resources[0].data.token | b64decode }}"
+    authentication_token: "{{ authentication_secret.resources[0].data.token }}"
   when: authentication_secret.resources and authentication == 'token'
 
 - name: If authentication is set to basic then grab username and password
@@ -274,6 +274,6 @@
 
 - name: Upload the cost report to ingress using token auth
   shell:
-    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" --cacert {{ cacert_path }}'
+    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" -H "User-Agent: insights-operator/39dbbca170d2b1baa5919fa8c5b9158b9ad7dd39 cluster/{{ ocp_cluster_id }}" --cacert {{ cacert_path }}'
     chdir: '{{ collect_download_path }}'
   when: authentication == 'token'
