@@ -130,6 +130,51 @@
     trusted_ca_bundle_contents: "{{ trusted_ca_bundle.resources[0].data['ca-bundle.crt'] }}"
   when: trusted_ca_bundle.resources
 
+- name: Fail if the authentication secret could not be found
+  fail:
+    msg: 'The authentication secret could not be found.'
+  when: not authentication_secret.resources
+
+- name: If authentication is set to token, get the auth token
+  set_fact:
+    authentication_token: "{{ authentication_secret.resources[0].data.token | b64decode }}"
+  when: authentication_secret.resources and authentication == 'token'
+
+- name: If authentication is set to basic then grab username and password
+  set_fact:
+    username: "{{ authentication_secret.resources[0].data.username | b64decode }}"
+    password: "{{ authentication_secret.resources[0].data.password | b64decode }}"
+  when: authentication_secret.resources and authentication == 'basic'
+
+- name: Fail if no token but token is specified
+  fail:
+    msg: 'The authentication method was set to token but the authentication secret did not contain a token.'
+  when: authentication == 'token' and not authentication_token
+
+- name: Fail if no username but basic authentication is specified
+  fail:
+    msg: 'The authentication method was set to basic but the authentication secret did not contain a username.'
+  when: authentication == 'basic' and not username
+
+- name: Fail if no password but basic authentication is specified
+  fail:
+    msg: 'The authentication method was set to basic but the authentication secret did not contain a password.'
+  when: authentication == 'basic' and not password
+
+- name: Check if cert file exists
+  stat:
+    path: "{{ cacert_path }}"
+  register: trusted_cert
+
+- name: debug the trusted cert
+  debug:
+    var: trusted_cert
+
+- name: Fail if the trusted cert does not exist
+  fail:
+    msg: 'Failing because the ssl certificate does not exist.'
+  when: not trusted_cert
+
 - name: Set download request facts
   set_fact:
     collect_file_prefix: '{{ collect_manifest_uuid }}'
@@ -220,66 +265,6 @@
   args:
     chdir: '{{ collect_download_path }}'
   register: packaged_reports
-
-- name: Fail if the authentication secret could not be found
-  fail:
-    msg: 'The authentication secret could not be found.'
-  when: not authentication_secret.resources
-
-- name: If authentication is set to token, get the auth token
-  set_fact:
-    authentication_token: "{{ authentication_secret.resources[0].data.token | b64decode }}"
-  when: authentication_secret.resources and authentication == 'token'
-
-- name: If authentication is set to basic then grab username and password
-  set_fact:
-    username: "{{ authentication_secret.resources[0].data.username | b64decode }}"
-    password: "{{ authentication_secret.resources[0].data.password | b64decode }}"
-  when: authentication_secret.resources and authentication == 'basic'
-
-- name: Fail if no token but token is specified
-  fail:
-    msg: 'The authentication method was set to token but the authentication secret did not contain a token.'
-  when: authentication == 'token' and not authentication_token
-
-- name: Fail if no username but basic authentication is specified
-  fail:
-    msg: 'The authentication method was set to basic but the authentication secret did not contain a username.'
-  when: authentication == 'basic' and not username
-
-- name: Fail if no password but basic authentication is specified
-  fail:
-    msg: 'The authentication method was set to basic but the authentication secret did not contain a password.'
-  when: authentication == 'basic' and not password
-
-- name: Check if cert file exists
-  stat:
-    path: "{{ cacert_path }}"
-  register: trusted_cert
-
-- name: debug the trusted cert
-  debug:
-    var: trusted_cert
-
-- name: Fail if the trusted cert does not exist
-  fail:
-    msg: 'Failing because the ssl certificate does not exist.'
-  when: not trusted_cert
-
-# - name: Upload the cost report to ingress
-#   uri:
-#     url: "{{ ingress_url }}"
-#     user: 'abaiken'
-#     password: 'redhat'
-#     force_basic_auth: yes
-#     body: "file=@cost-mgmt.tar.gz"
-#     method: POST
-#     # src: "{{ collect_download_path }}/cost-mgmt.tar.gz"
-#     headers:
-#         file: "@{{ collect_download_path }}/cost-mgmt.tar.gz"
-#         type: "application/vnd.redhat.hccm.tar+tgz"
-#     status_code: 202
-#     validate_certs: no
 
 - name: Upload the cost report to ingress using basic auth
   shell:
