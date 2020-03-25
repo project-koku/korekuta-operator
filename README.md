@@ -163,7 +163,7 @@ spec:
   authentication_secret_name: 'basic_auth_creds-123ab'
 ```
 
-Note: You can also specify the `ingress_url` inside ofthe CostManagement CR. This will allow you to upload to different environments. When you specify that you want to use ``basic`` authentication inside of the CostManagement CR you must deploy the authentication secret that holds your base64 encoded username and password. Feel free to use the authentication secret template at ``deploy/crds/authentication_secret.yaml`` but make sure that you edit the name to match the `authentication_secret_name` inside of the CostManagement CR. Then deploy the authentication secret using the following:
+Note: You can also specify the `ingress_url` inside of the CostManagement CR. This will allow you to upload to different environments. When you specify that you want to use ``basic`` authentication inside of the CostManagement CR you must deploy the authentication secret that holds your base64 encoded username and password. Feel free to use the authentication secret template at ``deploy/crds/authentication_secret.yaml`` but make sure that you edit the name to match the `authentication_secret_name` inside of the CostManagement CR. Then deploy the authentication secret using the following:
 
 ```
 oc create -f deploy/crds/authentication_secret.yaml
