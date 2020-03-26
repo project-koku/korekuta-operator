@@ -49,23 +49,70 @@ make test-local
 ```
 ## Setup for running the Operator
 
-Switch to the OpenShift project called `openshift-metering`:
+First, switch to the OpenShift project called `openshift-metering`. This is where we are going to deploy our Operator and its dependencies:
 
 ```
 oc project openshift-metering
 ```
+### Authentication setup
 
-OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy the CRDs:
+Decide if you are going to use `basic` authentication or `token` authentication to upload the Cost Reports to Ingress.
+
+#### Token authentication
+
+The default authentication method is token authentication. Inside of the cluster in the `openshift-config` namespace, there is a secret called `pull-secret` which has a `data` section that contains a `.dockerconfigjson`. In the `.dockerconfigjson` you need to grab the `auth` value associated with `cloud.openshift.com`. Edit the secret found at [deploy/crds/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/authentication_secret.yaml) to replace the token value with the `auth` value associated with `cloud.openshift.com`.
+
+#### Basic authentication
+
+Since basic authentication is not the default, we have to specify that we want to use it inside our our CostManagement custom resource. Edit the resource at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml) to add an authentication value under the spec. It should look like the following:
 
 ```
-oc create -f deploy/crds/cost_mgmt_crd.yaml
-oc create -f deploy/crds/cost_mgmt_data_crd.yaml
+---
+
+apiVersion: cost-mgmt.openshift.io/v1alpha1
+kind: CostManagement
+metadata:
+  name: cost-mgmt-setup
+spec:
+  clusterID: 'cluster-id-placeholder'
+  reporting_operator_token_name: 'reporting-operator-token-placeholder'
+  validate_cert: 'false'
+  authentication_secret_name: 'auth-secret-name-placeholder'
+  authentication: 'basic'
 ```
 
-We also need to deploy the ConfigMap containing the certificate authority chain for ssl verification when uploading the cost reports to ingress. This must be done before deploying the Operator because it is consumed through a volume:
+Next, edit the secret found at [deploy/crds/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/authentication_secret.yaml) to replace the username and password values with your base64 encoded username and password for connecting to [cloud.redhat.com](https://cloud.redhat.com/).
+
+For both methods of authentication, the name of the secret found at [deploy/crds/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/authentication_secret.yaml) should match the `authentication_secret_name` set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml).
+
+
+### Operator Configuration
+
+The `clusterID` and `reporting_operator_token_name` must be set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml). Change the `clusterID` value to your cluster ID. Change the `reporting_operator_token_name` to be the name of the `reporting-operator-token` secret found inside of the `openshift-metering` namespace. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your reporting operator token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `CostManagement` custom resource should look like the following:
 
 ```
-oc create -f deploy/crds/trusted_ca_certmap.yaml
+---
+
+apiVersion: cost-mgmt.openshift.io/v1alpha1
+kind: CostManagement
+metadata:
+  name: cost-mgmt-setup
+spec:
+  clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
+  reporting_operator_token_name: 'reporting-operator-token-123ab'
+  validate_cert: 'false'
+  authentication: 'basic'
+  authentication_secret_name: 'basic_auth_creds-123ab'
+```
+
+Note: You can also specify the `ingress_url` inside of the CostManagement CR spec. This will allow you to upload to different environments.
+
+### Creating the dependencies
+
+OpenShift needs to know about the new custom resource definitions that the operator will be watching. The ConfigMap containing the certificate authority chain for ssl verification when uploading the cost reports to ingress also needs to be deployed. This must be done before deploying the Operator because it is consumed through a volume. Make sure that you are logged into a cluster and run the following command to deploy both the `CostManagment` and `CostManagementData` CRDs, the certificate `ConfigMap`, the authentication secret, service account, role, and role binding to the cluster:
+
+```
+make deploy-dependencies
 ```
 
 ## Building & running the operator outside of a cluster
@@ -87,45 +134,34 @@ When running locally, we need to make sure that the path to the role in the `wat
   reconcilePeriod: 360m
 ```
 
-Finally, run the operator locally:
+Now, run the operator locally:
 
 ```
-operator-sdk run --local
+make run-locally
 ```
 
 You will see some info level logs about the operator starting up. The operator works by watching for a known resource and then triggering a role based off of the presence of that resource.
 
 ## Building & running the Operator as a pod inside the cluster
 
-Build the cost-mgmt-operator image and push it to a registry:
+To build the cost-mgmt-operator image and push it to a registry, run the following where `QUAY_USERNAME` is your quay username where the image will be pushed:
 
 ```
-operator-sdk build quay.io/example/cost-mgmt-operator:v0.0.1
-docker push quay.io/example/cost-mgmt-operator:v0.0.1
+make build-operator-image username=$QUAY_USERNAME
 ```
+Under the quay repository settings, make sure that you change the `Repository Visibility` to public.
 
-OpenShift deployment manifests are generated in deploy/operator.yaml. The deployment image in this file needs to be modified from the placeholder REPLACE_IMAGE to the previous built image. To do this run:
-
-```
-sed -i 's|{{ REPLACE_IMAGE }}|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
-```
-
-Note: If you are performing these steps on OSX, use the following sed commands instead:
+OpenShift deployment manifests are generated in deploy/operator.yaml. The deployment image in this file needs to be modified from the placeholder REPLACE_IMAGE to the previous built image. To correctly SED replace the image and deploy the Operator, run the following where `QUAY_USERNAME` is the username under which the image has been pushed:
 
 ```
-sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/example/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
+make sed-replace-deploy-operator username=$QUAY_USERNAME
 ```
 
-Under the quay repository settings, make sure that you change the `Repository Visibility` to public. Now, deploy the cost-mgmt-operator:
+Note: If you need to redeploy the operator, but do not need to sed replace the `operator.yaml` you can run:
 
 ```
-oc create -f deploy/service_account.yaml
-oc create -f deploy/role.yaml
-oc create -f deploy/role_binding.yaml
-oc create -f deploy/operator.yaml
+make deploy-operator
 ```
-
-Note: If you get an error about the `ImagePullPolicy` when deploying the operator, search for and replace `"{{ pull_policy|default('Always') }}"` with `"Always"` inside of the `deploy/operator.yaml` and redeploy the operator.
 
 Verify that the cost-mgmt-operator is up and running:
 
@@ -146,39 +182,12 @@ oc logs -f deployment/cost-mgmt-operator --container operator
 
 The setup role is going to create the reports defined in `roles/setup/files` using the namespace defined inside of `roles/setup/defaults/main.yml`. The default is `openshift-metering`.
 
-To start the setup and collect role, the associated custom resource in the `watches.yml` has to be present. Before deploying the `cost_mgmt_cr.yaml` edit it to have your cluster ID and Reporting Operator service account token name instead of the placeholders. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your service account token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `deploy/crds/cost_mgmt_cr.yaml` should look like the following:
+To start the setup and collect role, the associated custom resource in the `watches.yml` has to be present. To deploy both the `CostManagement` and `CostManagementData` custom resources, run the following:
 
 ```
----
-
-apiVersion: cost-mgmt.openshift.io/v1alpha1
-kind: CostManagement
-metadata:
-  name: cost-mgmt-setup
-spec:
-  clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
-  reporting_operator_token_name: 'reporting-operator-token-123ab'
-  validate_cert: 'false'
-  authentication: 'basic'
-  authentication_secret_name: 'basic_auth_creds-123ab'
+make deploy-custom-resources
 ```
 
-Note: You can also specify the `ingress_url` inside of the CostManagement CR. This will allow you to upload to different environments. When you specify that you want to use ``basic`` authentication inside of the CostManagement CR you must deploy the authentication secret that holds your base64 encoded username and password. If you use token authentication (the default), you should pull the token from the `openshift-config` namespace in a secret called `pull-secret` which has a `data` section that contains a `.dockerconfigjson`. In the `.dockerconfigjson` you need to grab the `auth` value associated with `cloud.openshift.com`. You can save this as the token for your secret. Feel free to use the authentication secret template at ``deploy/crds/authentication_secret.yaml`` but make sure that you edit the name to match the `authentication_secret_name` inside of the CostManagement CR.
-
-Then deploy the authentication secret using the following:
-
-```
-oc create -f deploy/crds/authentication_secret.yaml
-```
-
-Run the following to create both a CostManagement CR and a CostManagementData CR:
-
-```
-oc create -f deploy/crds/cost_mgmt_cr.yaml
-oc create -f deploy/crds/cost_mgmt_data_cr.yaml
-```
-
-You should now see the Ansible logs from the setup role.
 
 ## Running Ansible locally for development
 
@@ -206,12 +215,7 @@ This should show you the same output as if the role was being ran inside of the 
 After testing, you can cleanup the resources using the following:
 
 ```
-oc delete -f deploy/crds/cost_mgmt_cr.yaml
-oc delete -f deploy/crds/cost_mgmt_crd.yaml
-oc delete -f deploy/crds/trusted_ca_certmap.yaml
-oc delete -f deploy/crds/authentication_secret.yaml
-oc delete -f deploy/operator.yaml
-oc delete -f deploy/role_binding.yaml
-oc delete -f deploy/role.yaml
-oc delete -f deploy/service_account.yaml
+delete-operator
+make delete-dependencies-and-resources
+make delete-metering-report-resources
 ```

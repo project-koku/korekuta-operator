@@ -7,6 +7,8 @@ COPY uid_entrypoint.sh /usr/local/bin/uid_entrypoint.sh
 USER root
 
 ENV TINI_VERSION v0.18.0
+ARG GIT_COMMIT=''
+ENV SOURCE_COMMIT=$GIT_COMMIT
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 # put tini into our path

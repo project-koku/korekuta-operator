@@ -73,6 +73,7 @@
 - name: debug auth secret name
   debug:
     var: authentication_secret_name
+  when: debug
 
 - name: Set the authentication method
   set_fact:
@@ -83,6 +84,7 @@
 - name: debug auth method
   debug:
     var: authentication
+  when: debug
 
 - name: Set the ingress URL
   set_fact:
@@ -93,6 +95,7 @@
 - name: debug ingress URL
   debug:
     var: ingress_url
+  when: debug
 
 - name: Fail if auth secret is not set
   fail:
@@ -169,11 +172,21 @@
 - name: debug the trusted cert
   debug:
     var: trusted_cert
+  when: debug
 
 - name: Fail if the trusted cert does not exist
   fail:
     msg: 'Failing because the ssl certificate does not exist.'
   when: not trusted_cert
+
+- name: Obtain the source commit
+  set_fact:
+    source_commit: "{{ lookup('env','SOURCE_COMMIT') }}"
+
+- name: debug the source_commit
+  debug:
+    var: source_commit
+  when: debug
 
 - name: Set download request facts
   set_fact:
@@ -232,6 +245,7 @@
 - name: debug download result
   debug:
     var: download_result
+  when: debug
 
 - name: append filename to fact list
   set_fact:
@@ -241,6 +255,7 @@
 - name: debug csv_files
   debug:
     var: csv_files
+  when: debug
 
 - name: Check that required files exist
   stat:
@@ -252,6 +267,7 @@
 - name: debug the csv_stat_result
   debug:
     var: csv_stat_result
+  when: debug
 
 - name: Check for empty download results
   fail:
@@ -274,6 +290,6 @@
 
 - name: Upload the cost report to ingress using token auth
   shell:
-    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" -H "User-Agent: insights-operator/39dbbca170d2b1baa5919fa8c5b9158b9ad7dd39 cluster/{{ ocp_cluster_id }}" --cacert {{ cacert_path }}'
+    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" -H "User-Agent: insights-operator/{{ source_commit }} cluster/{{ ocp_cluster_id }}" --cacert {{ cacert_path }}'
     chdir: '{{ collect_download_path }}'
   when: authentication == 'token'
