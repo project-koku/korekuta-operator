@@ -47,7 +47,7 @@ We utilize [molecule](https://molecule.readthedocs.io/en/latest/) to test the an
 ```
 make test-local
 ```
-## Setup for running the operator
+## Setup for running the Operator
 
 First, switch to the OpenShift project called `openshift-metering`. This is where we are going to deploy our Operator and its dependencies:
 
