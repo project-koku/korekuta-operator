@@ -217,4 +217,5 @@ After testing, you can cleanup the resources using the following:
 ```
 delete-operator
 make delete-dependencies-and-resources
+make delete-metering-report-resources
 ```

@@ -20,6 +20,7 @@ help:
 	@echo "  deploy-custom-resources             deploy the cost management custom resources to trigger the operator roles"
 	@echo "  delete-dependencies-and-resources   delete the custom resources and dependencies in the cluster"
 	@echo "  delete-operator                     delete the operator deployment in the cluster"
+	@echo "  delete-metering-report-resources    delete the report and report queries created by the setup role in the cluster"
 
 test-local:
 	tox -e test-local
@@ -63,3 +64,24 @@ delete-dependencies-and-resources:
 
 delete-operator:
 	oc delete -f deploy/operator.yaml
+
+delete-metering-report-resources:
+	oc delete report cm-openshift-node-labels
+	oc delete report cm-openshift-node-labels-lookback
+	oc delete report cm-openshift-persistentvolumeclaim
+	oc delete report cm-openshift-persistentvolumeclaim-lookback
+	oc delete report cm-openshift-usage
+	oc delete report cm-openshift-usage-lookback
+	oc delete reportquery cm-node-labels-raw
+	oc delete reportquery cm-openshift-node-labels
+	oc delete reportquery cm-openshift-node-labels-lookback
+	oc delete reportquery cm-openshift-persistentvolumeclaim
+	oc delete reportquery cm-openshift-persistentvolumeclaim-lookback
+	oc delete reportquery cm-openshift-usage
+	oc delete reportquery cm-openshift-usage-lookback
+	oc delete reportquery cm-persistentvolume-labels-raw
+	oc delete reportquery cm-persistentvolumeclaim-labels-raw
+	oc delete reportquery cm-pod-cpu-limit-raw
+	oc delete reportquery cm-pod-labels-raw
+	oc delete reportquery cm-pod-memory-limit-raw
+	oc delete reportquery cm-pod-persistentvolumeclaim-info-raw
