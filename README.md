@@ -64,7 +64,7 @@ The default authentication method is token authentication. Inside of the cluster
 
 #### Basic authentication
 
-Since basic authentication is not the default, we have to specify that we want to use it inside our our CostManagement custom resource. Edit the resource at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml) to add an authentication value under the specs. It should look like the following:
+Since basic authentication is not the default, we have to specify that we want to use it inside our our CostManagement custom resource. Edit the resource at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml) to add an authentication value under the spec. It should look like the following:
 
 ```
 ---
@@ -88,7 +88,7 @@ For both methods of authentication, the name of the secret found at [deploy/crds
 
 ### Operator Configuration
 
-To configure the Operator's `clusterID` and `reporting_operator_token_name`, we need to edit the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml). Change the `clusterID` value to your cluster ID. Change the `reporting_operator_token_name` to be the name of the `reporting-operator-token` secret found inside of the `openshift-metering` namespace. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your reporting operator token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `deploy/crds/cost_mgmt_cr.yaml` should look like the following:
+The `clusterID` and `reporting_operator_token_name` must be set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml). Change the `clusterID` value to your cluster ID. Change the `reporting_operator_token_name` to be the name of the `reporting-operator-token` secret found inside of the `openshift-metering` namespace. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your reporting operator token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `CostManagement` custom resource should look like the following:
 
 ```
 ---
