@@ -67,21 +67,4 @@ delete-operator:
 
 delete-metering-report-resources:
 	oc delete report cm-openshift-node-labels
-	oc delete report cm-openshift-node-labels-lookback
-	oc delete report cm-openshift-persistentvolumeclaim
-	oc delete report cm-openshift-persistentvolumeclaim-lookback
-	oc delete report cm-openshift-usage
-	oc delete report cm-openshift-usage-lookback
-	oc delete reportquery cm-node-labels-raw
-	oc delete reportquery cm-openshift-node-labels
-	oc delete reportquery cm-openshift-node-labels-lookback
-	oc delete reportquery cm-openshift-persistentvolumeclaim
-	oc delete reportquery cm-openshift-persistentvolumeclaim-lookback
-	oc delete reportquery cm-openshift-usage
-	oc delete reportquery cm-openshift-usage-lookback
-	oc delete reportquery cm-persistentvolume-labels-raw
-	oc delete reportquery cm-persistentvolumeclaim-labels-raw
-	oc delete reportquery cm-pod-cpu-limit-raw
-	oc delete reportquery cm-pod-labels-raw
-	oc delete reportquery cm-pod-memory-limit-raw
-	oc delete reportquery cm-pod-persistentvolumeclaim-info-raw
+	oc delete -f roles/setup/files
