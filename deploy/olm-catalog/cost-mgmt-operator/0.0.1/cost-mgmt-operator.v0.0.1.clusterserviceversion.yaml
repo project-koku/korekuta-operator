@@ -43,16 +43,6 @@ spec:
       name: cost-mgmt-data.cost-mgmt-data.openshift.io
       version: v1alpha1
     required:
-    - description: Cost Management resource
-      displayName: CostManagement
-      kind: CostManagement
-      name: costmanagements.cost-mgmt.openshift.io
-      version: v1alpha1
-    - description: Cost Management Data resource
-      displayName: CostManagementData
-      kind: CostManagementData
-      name: cost-mgmt-data.cost-mgmt-data.openshift.io
-      version: v1alpha1
     - description: An instance of Metering with high-level configuration
       displayName: Metering Configuration
       kind: MeteringConfig
@@ -296,6 +286,8 @@ spec:
   - name: cost-mgmt
     email: cost-mgmt@redhat.com
   maturity: alpha
-  provider: {}
+  minKubeVersion: 1.14.6
+  provider:
+    name: Red Hat
   replaces: cost-mgmt-operator.v0.0.0
-  version: 0.0.1
+  version: "0.0.1"
