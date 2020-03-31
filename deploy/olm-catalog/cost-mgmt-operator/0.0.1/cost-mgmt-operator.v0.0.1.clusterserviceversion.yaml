@@ -27,9 +27,11 @@ metadata:
           }
         }
       ]
-    capabilities: Basic Install
+  capabilities: Basic Install
   name: cost-mgmt-operator.v0.0.1
   namespace: openshift-metering
+  repository: https://github.com/project-koku/korekuta-operator
+  support: Red Hat, Inc.
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
@@ -273,23 +275,23 @@ spec:
                 - list
           serviceAccountName: cost-mgmt-operator
     strategy: deployment
-    installModes:
-      - supported: true
-        type: OwnNamespace
-      - supported: true
-        type: SingleNamespace
-      - supported: false
-        type: MultiNamespace
-      - supported: true
-        type: AllNamespaces
-    keywords:
-      - ""
-    maintainers:
-      - name: cost-mgmt
-        email: cost-mgmt@redhat.com
-    maturity: alpha
-    minKubeVersion: 1.14.6
-    provider:
-      name: Red Hat
-    replaces: cost-mgmt-operator.v0.0.0
-    version: 0.0.1
+  installModes:
+    - supported: true
+      type: OwnNamespace
+    - supported: true
+      type: SingleNamespace
+    - supported: false
+      type: MultiNamespace
+    - supported: false
+      type: AllNamespaces
+  keywords:
+    - ""
+  maintainers:
+    - name: cost-mgmt
+      email: cost-mgmt@redhat.com
+  maturity: alpha
+  minKubeVersion: 1.14.6
+  provider:
+    name: Red Hat
+  replaces: cost-mgmt-operator.v0.0.0
+  version: 0.0.1
