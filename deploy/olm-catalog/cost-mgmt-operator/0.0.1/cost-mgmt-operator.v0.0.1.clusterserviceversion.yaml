@@ -271,7 +271,7 @@ spec:
                 - routes
               verbs:
                 - list
-    serviceAccountName: cost-mgmt-operator
+          serviceAccountName: cost-mgmt-operator
     strategy: deployment
     installModes:
       - supported: true
