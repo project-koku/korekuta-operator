@@ -8,3 +8,4 @@ ignore: |
 rules:
   truthy: disable
   line-length: disable
+  indentation: disable
