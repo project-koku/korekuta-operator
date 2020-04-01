@@ -295,7 +295,7 @@
 
 - name: Wait before upload to space out metric delivery
   wait_for:
-    timeout: 300
+    timeout: '{{ collect_upload_wait }}'
   delegate_to: localhost
 
 - name: Upload the cost report to ingress using basic auth
