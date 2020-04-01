@@ -45,6 +45,13 @@
     msg: 'The cost-mgmt-setup custom resource requires the clusterID and reporting_operator_token_name to be defined.'
   when: not ocp_cluster_id or not reporting_operator_token_name
 
+- name: Set upload_wait
+  set_fact:
+    collect_upload_wait: "{{ cost_mgmt_setup.resources[0].spec.upload_wait | int }}"
+  when:
+    - cost_mgmt_setup.resources
+    - cost_mgmt_setup.resources[0].spec.upload_wait
+
 - name: Obtain metering api info
   k8s_info:
     api_version: v1
@@ -281,6 +288,15 @@
   args:
     chdir: '{{ collect_download_path }}'
   register: packaged_reports
+
+- name: Wait time before upload in seconds
+  debug:
+    var: collect_upload_wait
+
+- name: Wait before upload to space out metric delivery
+  wait_for:
+    timeout: 300
+  delegate_to: localhost
 
 - name: Upload the cost report to ingress using basic auth
   shell:

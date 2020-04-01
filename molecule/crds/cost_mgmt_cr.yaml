@@ -11,3 +11,4 @@ spec:
   authentication: 'basic'
   authentication_secret_name: 'auth-secret-name-placeholder'
   ingress_url: 'http://localhost:8000'
+  upload_wait: 1
