@@ -478,7 +478,7 @@
             - "'Successful' in (cm_data_cr |
               json_query('resources[].status.conditions[].reason'))"
           delay: 12
-          retries: 10
+          retries: 25
 
       rescue:
         - name: debug cr
