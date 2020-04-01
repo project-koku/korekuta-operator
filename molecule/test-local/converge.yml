@@ -159,7 +159,7 @@
             - "'Metering has not been configured.' in
               (cr | json_query('resources[].status.conditions[].message'))"
           delay: 12
-          retries: 10
+          retries: 25
 
       rescue:
         - name: debug cr
