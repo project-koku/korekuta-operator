@@ -159,7 +159,7 @@
             - "'Metering has not been configured.' in
               (cr | json_query('resources[].status.conditions[].message'))"
           delay: 12
-          retries: 25
+          retries: 10
 
       rescue:
         - name: debug cr
@@ -184,15 +184,28 @@
             deploy: '{{ lookup("k8s",
               kind="Deployment",
               api_version="apps/v1",
-              namespace=namespace,
-              label_selector="app=cost-mgmt"
+              namespace=namespace
             )}}'
 
         - name: get operator logs
           ignore_errors: yes
           failed_when: false
           command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }}
+            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c operator
+          environment:
+            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
+          vars:
+            definition: "{{ lookup('template',
+              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
+          register: log
+
+        - debug: var=log.stdout_lines
+
+        - name: get ansible logs
+          ignore_errors: yes
+          failed_when: false
+          command: kubectl logs
+            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c ansible
           environment:
             KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
           vars:
@@ -348,15 +361,28 @@
             deploy: '{{ lookup("k8s",
               kind="Deployment",
               api_version="apps/v1",
-              namespace=namespace,
-              label_selector="app=cost-mgmt"
+              namespace=namespace
             )}}'
 
         - name: get operator logs
           ignore_errors: yes
           failed_when: false
           command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }}
+            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c operator
+          environment:
+            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
+          vars:
+            definition: "{{ lookup('template',
+              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
+          register: log
+
+        - debug: var=log.stdout_lines
+
+        - name: get ansible logs
+          ignore_errors: yes
+          failed_when: false
+          command: kubectl logs
+            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c ansible
           environment:
             KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
           vars:
@@ -478,7 +504,7 @@
             - "'Successful' in (cm_data_cr |
               json_query('resources[].status.conditions[].reason'))"
           delay: 12
-          retries: 25
+          retries: 10
 
       rescue:
         - name: debug cr
@@ -503,15 +529,28 @@
             deploy: '{{ lookup("k8s",
               kind="Deployment",
               api_version="apps/v1",
-              namespace=namespace,
-              label_selector="app=cost-mgmt"
+              namespace=namespace
             )}}'
 
         - name: get operator logs
           ignore_errors: yes
           failed_when: false
           command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }}
+            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c  operator
+          environment:
+            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
+          vars:
+            definition: "{{ lookup('template',
+              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
+          register: log
+
+        - debug: var=log.stdout_lines
+
+        - name: get ansible logs
+          ignore_errors: yes
+          failed_when: false
+          command: kubectl logs
+            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c  ansible
           environment:
             KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
           vars:
