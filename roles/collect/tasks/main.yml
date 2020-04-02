@@ -50,7 +50,7 @@
     collect_upload_wait: "{{ cost_mgmt_setup.resources[0].spec.upload_wait | int }}"
   when:
     - cost_mgmt_setup.resources
-    - cost_mgmt_setup.resources[0].spec.upload_wait
+  ignore_errors: true
 
 - name: Obtain metering api info
   k8s_info:
