@@ -48,8 +48,7 @@
 - name: Set upload_wait
   set_fact:
     collect_upload_wait: "{{ cost_mgmt_setup.resources[0].spec.upload_wait | int }}"
-  when:
-    - cost_mgmt_setup.resources
+  when: cost_mgmt_setup.resources
   ignore_errors: true
 
 - name: Obtain metering api info
