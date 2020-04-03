@@ -305,6 +305,6 @@
 
 - name: Upload the cost report to ingress using token auth
   shell:
-    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" -H "User-Agent: insights-operator/{{ source_commit }} cluster/{{ ocp_cluster_id }}" --cacert {{ cacert_path }}'
+    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" -H "User-Agent: cost-mgmt-operator/{{ source_commit }} cluster/{{ ocp_cluster_id }}" --cacert {{ cacert_path }}'
     chdir: '{{ collect_download_path }}'
   when: authentication == 'token'
