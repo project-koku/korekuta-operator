@@ -1,0 +1,130 @@
+---
+
+- name: debug input_month
+  debug:
+    var: input_month
+
+- name: debug month_delta
+  debug:
+    var: month_delta
+
+- name: debug input_year
+  debug:
+    var: input_year
+
+- name: Set evaluate_month
+  set_fact:
+    evaluate_month: '{{ (input_month | int) + (month_delta | int) }}'
+    evaluate_year: '{{ input_year | int }}'
+
+- name: Set report_start_year to current year
+  set_fact:
+    report_start_year: '{{ input_year | string }}'
+  when: (evaluate_month | int) > 1
+
+- name: Set report_start_year to previous year if January
+  set_fact:
+    report_start_year: '{{ (input_year - 1) | string }}'
+    evaluate_year: '{{ (input_year - 1) }}'
+  when: (evaluate_month | int)  <= 1
+
+- name: Set report_start_month to 11 (November) if January and evaluating previous month
+  set_fact:
+    report_start_month: '11'
+  when: (evaluate_month | int) == 0
+
+- name: Set report_start_month to 12 (Decemeber) if January
+  set_fact:
+    report_start_month: '12'
+  when: (evaluate_month | int) == 1
+
+- name: Set report_start_month to previous month
+  set_fact:
+    report_start_month: '{{ ((evaluate_month | int) - 1) | string }}'
+  when:
+    - (evaluate_month | int) > 1
+
+- name: Set report_start_month if single digit
+  set_fact:
+    report_start_month: '{{ "0" + report_start_month }}'
+  when:
+    - (report_start_month | int) < 10
+
+- name: Set report_end_year to current year
+  set_fact:
+    report_end_year: '{{ input_year | string }}'
+  when: (evaluate_month | int) < 12
+
+- name: Set report_end_year to next year if Decemeber
+  set_fact:
+    report_end_year: '{{ (input_year + 1) | string }}'
+    evaluate_year: '{{ (input_year + 1) }}'
+  when: (evaluate_month | int) >= 12
+
+- name: Set report_end_month to 2 (February) if Decemeber and evaluating next month
+  set_fact:
+    report_end_month: '02'
+  when: (evaluate_month | int) == 13
+
+- name: Set report_end_month to 1 (January) if Decemeber
+  set_fact:
+    report_end_month: '01'
+  when: (evaluate_month | int) == 12
+
+- name: Set report_end_month
+  set_fact:
+    report_end_month: '{{ ((evaluate_month | int) + 1) | string }}'
+  when: (evaluate_month | int) < 12
+
+- name: Set report_end_month if single digit
+  set_fact:
+    report_end_month: '{{ "0" + report_end_month }}'
+  when:
+    - (report_end_month | int)  < 10
+
+- name: Set evaluate_month string less than 10
+  set_fact:
+    evaluate_month_str: '{{ "0" + (evaluate_month | string) }}'
+  when:
+    - (evaluate_month | int)  < 10
+
+- name: Set evaluate_month string
+  set_fact:
+    evaluate_month_str: '{{ (evaluate_month | string) }}'
+  when:
+    - (evaluate_month | int)  >= 10
+
+- name: Set monthly suffix for reports
+  set_fact:
+    current_year_month: '{{ (evaluate_year | string )  + evaluate_month_str}}'
+
+- name: Set template_path
+  set_fact:
+    template_path: '{{ setup_template_path }}/{{  setup_template_dir }}'
+
+- name: Create template location
+  file:
+    path: '{{ template_path }}'
+    state: directory
+    mode: 0755
+
+- name: Write template report files
+  template:
+    src: '{{ item }}'
+    dest: '{{ template_path }}/{{ item | basename | regex_replace("j2$", "yml") }}'
+  with_fileglob:
+    - templates/*.j2
+
+- name: Templated reports state
+  k8s:
+    namespace: '{{ namespace }}'
+    state: '{{ state }}'
+    src: '{{ item }}'
+  with_fileglob:
+    - '{{ template_path }}/cm*'
+
+- name: Remove template files
+  file:
+    path: '{{ template_path }}'
+    state: absent
+  when: setup_delete_after | bool

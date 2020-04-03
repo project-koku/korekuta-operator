@@ -4,13 +4,15 @@ kind: Report
 metadata:
   labels:
     cost-management: "true"
-  name: cm-openshift-node-labels-lookback
+  name: cm-openshift-node-labels-lookback-{{ current_year_month }}
 spec:
   query: cm-openshift-node-labels-lookback
   inputs:
     - name: CostManagementOpenShiftNodeLabelsReportName
-      value: cm-openshift-node-labels
+      value: cm-openshift-node-labels-{{ current_year_month }}
   gracePeriod: 10m  # wait for sub-query to finish
+  reportingStart: '{{ report_start_year }}-{{ report_start_month }}-26T00:00:00Z'
+  reportingEnd: '{{ report_end_year }}-{{ report_end_month }}-02T00:00:00Z'
   schedule:
     period: hourly
   overwriteExistingData: true
