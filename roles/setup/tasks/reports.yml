@@ -33,7 +33,7 @@
     report_start_month: '11'
   when: (evaluate_month | int) == 0
 
-- name: Set report_start_month to 12 (Decemeber) if January
+- name: Set report_start_month to 12 (December) if January
   set_fact:
     report_start_month: '12'
   when: (evaluate_month | int) == 1
@@ -55,18 +55,18 @@
     report_end_year: '{{ input_year | string }}'
   when: (evaluate_month | int) < 12
 
-- name: Set report_end_year to next year if Decemeber
+- name: Set report_end_year to next year if December
   set_fact:
     report_end_year: '{{ ((input_year | int) + 1) | string }}'
     evaluate_year: '{{ (input_year + 1) }}'
   when: (evaluate_month | int) >= 12
 
-- name: Set report_end_month to 2 (February) if Decemeber and evaluating next month
+- name: Set report_end_month to 2 (February) if December and evaluating next month
   set_fact:
     report_end_month: '02'
   when: (evaluate_month | int) == 13
 
-- name: Set report_end_month to 1 (January) if Decemeber
+- name: Set report_end_month to 1 (January) if December
   set_fact:
     report_end_month: '01'
   when: (evaluate_month | int) == 12
