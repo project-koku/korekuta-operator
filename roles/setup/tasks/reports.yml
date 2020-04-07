@@ -63,12 +63,12 @@
 
 - name: Set report_end_month to 2 (February) if December and evaluating next month
   set_fact:
-    report_end_month: '02'
+    report_end_month: '2'
   when: (evaluate_month | int) == 13
 
 - name: Set report_end_month to 1 (January) if December
   set_fact:
-    report_end_month: '01'
+    report_end_month: '1'
   when: (evaluate_month | int) == 12
 
 - name: Set report_end_month
