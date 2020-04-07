@@ -205,7 +205,7 @@
 - name: Create trusted-ca-bundle if it doesn't exist
   k8s:
     state: present
-    src: 'trusted_ca_certmap.yaml'
+    src: '{{ ansible_env.HOME }}/roles/collect/files/trusted_ca_certmap.yaml'
   when: not trusted_ca_bundle_check.resources
 
 - name: Get the trusted-ca-bundle
