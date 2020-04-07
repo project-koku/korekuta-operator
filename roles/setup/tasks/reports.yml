@@ -60,7 +60,7 @@
 - name: Set report_end_year to next year if December
   set_fact:
     report_end_year: '{{ ((input_year | int) + 1) | string }}'
-    evaluate_year: '{{ (input_year | int) + 1) }}'
+    evaluate_year: '{{ ((input_year | int) + 1) }}'
   when:
     - (evaluate_month | int) >= 12
     - (month_delta | int) == 1
