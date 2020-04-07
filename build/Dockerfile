@@ -14,10 +14,6 @@ RUN dnf -y install git && \
     cat /tmp/commit
 
 ENV TINI_VERSION v0.18.0
-ARG SOURCE_COMMIT=''
-ENV SOURCE_COMMIT=${SOURCE_COMMIT}
-RUN echo $SOURCE_COMMIT
-
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 # put tini into our path
