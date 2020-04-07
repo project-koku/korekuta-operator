@@ -202,8 +202,14 @@
     name: "trusted-ca-bundle"
   register: trusted_ca_bundle_check
 
+- name: debug the trusted-ca-bundle
+  debug:
+    var: trusted_ca_bundle_check
+  when: debug
+
 - name: Create trusted-ca-bundle if it doesn't exist
   k8s:
+    namespace: "{{ namespace }}"
     state: present
     src: '{{ ansible_env.HOME }}/roles/collect/files/trusted_ca_certmap.yaml'
   when: not trusted_ca_bundle_check.resources
