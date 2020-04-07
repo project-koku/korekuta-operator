@@ -181,25 +181,11 @@
     var: source_commit
   when: debug
 
-- name: Check if trusted-ca-bundle exists
-  k8s_info:
-    api_version: v1
-    kind: ConfigMap
-    namespace: "{{ namespace }}"
-    name: "trusted-ca-bundle"
-  register: trusted_ca_bundle_check
-
-- name: debug the trusted-ca-bundle
-  debug:
-    var: trusted_ca_bundle_check
-  when: debug
-
 - name: Create trusted-ca-bundle if it doesn't exist
   k8s:
     namespace: "{{ namespace }}"
     state: present
     src: '{{ ansible_env.HOME }}/roles/collect/files/trusted_ca_certmap.yaml'
-  when: not trusted_ca_bundle_check.resources
 
 - name: Get the trusted-ca-bundle
   k8s_info:
@@ -216,6 +202,12 @@
 
 - name: Write the trusted-ca-bundle contents to a file
   copy: content="{{ trusted_ca_bundle_contents }}" dest="{{ cacert_path }}"
+  when: trusted_ca_bundle_contents is defined
+  
+- name: Fail the trusted ca certificate could not be found and certificate validation is enabled
+  fail:
+    msg: 'The trusted ca certificate could not be found and certificate validation is enabled.'
+  when: trusted_ca_bundle_contents is not defined and (ocp_validate_cert | bool)
 
 - name: Set download request facts
   set_fact:
