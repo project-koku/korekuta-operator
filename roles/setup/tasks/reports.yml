@@ -55,7 +55,7 @@
 - name: Set report_end_year to current year
   set_fact:
     report_end_year: '{{ input_year | string }}'
-  when: (evaluate_month | int) < 12
+  when: (evaluate_month | int) <= 12
 
 - name: Set report_end_year to next year if December
   set_fact:
