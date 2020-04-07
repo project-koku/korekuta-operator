@@ -11,6 +11,14 @@
     msg: 'Metering has not been configured.'
   when: not metering_objects.resources
 
+- name: Obtain cost-mgmt-setup info
+  k8s_info:
+    api_version: cost-mgmt.openshift.io/v1alpha1
+    kind: CostManagement
+    namespace: "{{ namespace }}"
+    name: cost-mgmt-setup
+  register: cost_mgmt_setup
+
 - name: Set current_day
   set_fact:
     current_day: "{{ cost_mgmt_setup.resources[0].spec.current_day | int }}"
