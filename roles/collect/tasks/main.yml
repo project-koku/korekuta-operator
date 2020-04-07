@@ -203,7 +203,7 @@
 - name: Write the trusted-ca-bundle contents to a file
   copy: content="{{ trusted_ca_bundle_contents }}" dest="{{ cacert_path }}"
   when: trusted_ca_bundle_contents is defined
-  
+
 - name: Fail the trusted ca certificate could not be found and certificate validation is enabled
   fail:
     msg: 'The trusted ca certificate could not be found and certificate validation is enabled.'
