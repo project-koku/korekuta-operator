@@ -109,7 +109,7 @@ Note: You can also specify the `ingress_url` inside of the CostManagement CR spe
 
 ### Creating the dependencies
 
-OpenShift needs to know about the new custom resource definitions that the operator will be watching. The ConfigMap containing the certificate authority chain for ssl verification when uploading the cost reports to ingress also needs to be deployed. This must be done before deploying the Operator because it is consumed through a volume. Make sure that you are logged into a cluster and run the following command to deploy both the `CostManagment` and `CostManagementData` CRDs, the certificate `ConfigMap`, the authentication secret, service account, role, and role binding to the cluster:
+OpenShift needs to know about the new custom resource definitions that the operator will be watching. Make sure that you are logged into a cluster and run the following command to deploy both the `CostManagment` and `CostManagementData` CRDs, the authentication secret, service account, role, and role binding to the cluster:
 
 ```
 make deploy-dependencies
