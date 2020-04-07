@@ -26,7 +26,7 @@
   set_fact:
     report_start_year: '{{ ((input_year | int) - 1) | string }}'
     evaluate_year: '{{ ((input_year | int) - 1) }}'
-  when: (evaluate_month | int)  <= 1
+  when: (evaluate_month | int)  <= 1 and (month_delta | int) == -1
 
 - name: Set report_start_month to 11 (November) if January and evaluating previous month
   set_fact:
@@ -58,8 +58,8 @@
 - name: Set report_end_year to next year if December
   set_fact:
     report_end_year: '{{ ((input_year | int) + 1) | string }}'
-    evaluate_year: '{{ ((input_year | int) + 1) }}'
-  when: (evaluate_month | int) >= 12
+    evaluate_year: '{{ (input_year | int) + 1) }}'
+  when: (evaluate_month | int) >= 12 and and (month_delta | int) == 1
 
 - name: Set report_end_month to 2 (February) if December and evaluating next month
   set_fact:
