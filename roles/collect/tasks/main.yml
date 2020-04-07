@@ -126,19 +126,6 @@
     msg: 'Reporting Operator token does not exist'
   when: not reporting_operator_token
 
-# - name: Get the trusted-ca-bundle
-#   k8s_info:
-#     api_version: v1
-#     kind: ConfigMap
-#     namespace: "{{ namespace }}"
-#     name: "{{ trusted_bundle_name }}"
-#   register: trusted_ca_bundle
-
-# - name: Set the trusted-ca-bundle contents
-#   set_fact:
-#     trusted_ca_bundle_contents: "{{ trusted_ca_bundle.resources[0].data['ca-bundle.crt'] }}"
-#   when: trusted_ca_bundle.resources
-
 - name: Fail if the authentication secret could not be found
   fail:
     msg: 'The authentication secret could not be found.'
@@ -222,7 +209,7 @@
     name: "trusted-ca-bundle"
   register: trusted_ca_bundle
 
-- name: Set the trusted-ca-bundle contents
+- name: Set the trusted-ca-bundle crt contents
   set_fact:
     trusted_ca_bundle_contents: "{{ trusted_ca_bundle.resources[0].data['ca-bundle.crt'] }}"
   when: trusted_ca_bundle.resources
