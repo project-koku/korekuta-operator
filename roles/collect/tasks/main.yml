@@ -185,14 +185,9 @@
     msg: 'Failing because the ssl certificate does not exist.'
   when: not trusted_cert
 
-- name: Obtain the source commit
-  set_fact:
-    source_commit: "{{ lookup('env','SOURCE_COMMIT') }}"
-
 - name: Obtain the source commit from file
   set_fact:
     source_commit: "{{ lookup('file', ansible_env.HOME + '/commit') }}"
-  when: source_commit is not defined or source_commit == ''
 
 - name: debug the source_commit
   debug:
