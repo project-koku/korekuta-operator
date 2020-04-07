@@ -1,5 +1,4 @@
 OS := $(shell uname)
-COMMIT := $(shell git rev-parse HEAD)
 ifeq ($(OS),Darwin)
 	PREFIX	=
 else
@@ -13,8 +12,10 @@ help:
 	@echo "  run-locally                         run the operator outside of the cluster"
 	@echo "  build-operator-image                build and push the image to quay"
 	@echo "      username=<quay_username>           @param - Required. The quay.io username where the image should be pushed"
-	@echo "  sed-replace-deploy-operator         edit the operator.yaml to have your image name and deploy the operator to the cluster"
+	@echo "  deploy-operator-quay-user           edit the operator.yaml to have your image name and deploy the operator to the cluster"
 	@echo "      username=<quay_username>           @param - Required. The quay.io username where the image is hosted"
+	@echo "  deploy-operator-dev-branch          edit the operator.yaml to have your image name and deploy the operator to the cluster"
+	@echo "      branch=<git_branch>                @param - Required. The git branch name for the development image"
 	@echo "  deploy-operator                     deploy the operator to the cluster"
 	@echo "  deploy-dependencies                 deploy all operator dependencies to the cluster"
 	@echo "  deploy-custom-resources             deploy the cost management custom resources to trigger the operator roles"
@@ -29,20 +30,25 @@ run-locally:
 	operator-sdk run --local
 
 build-operator-image:
-	operator-sdk build quay.io/$(username)/cost-mgmt-operator:v0.0.1 --image-build-args "--build-arg GIT_COMMIT=$(COMMIT)"
+	operator-sdk build quay.io/$(username)/cost-mgmt-operator:v0.0.1
 	docker push quay.io/$(username)/cost-mgmt-operator:v0.0.1
 
 deploy-operator:
 	oc create -f deploy/operator.yaml
 
-sed-replace-deploy-operator:
+deploy-operator-quay-user:
 	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/$(username)/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
 	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" deploy/operator.yaml
 	oc create -f deploy/operator.yaml
 
+deploy-operator-dev-branch:
+	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/project-koku/korekuta-operator:$(branch)|g' deploy/operator.yaml
+	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" deploy/operator.yaml
+	oc create -f deploy/operator.yaml
+
 deploy-dependencies:
-	oc create -f deploy/crds/cost_mgmt_crd.yaml
-	oc create -f deploy/crds/cost_mgmt_data_crd.yaml
+	oc create -f deploy/crds/cost_mgmt_crd.yaml || true
+	oc create -f deploy/crds/cost_mgmt_data_crd.yaml || true
 	oc create -f deploy/crds/authentication_secret.yaml
 	oc create -f deploy/service_account.yaml
 	oc create -f deploy/role.yaml
@@ -66,5 +72,6 @@ delete-operator:
 	oc delete -f deploy/operator.yaml
 
 delete-metering-report-resources:
-	oc delete report cm-openshift-node-labels
-	oc delete -f roles/setup/files
+	oc delete report cm-openshift-node-labels || true
+	oc delete -f roles/setup/files || true
+	oc delete report --selector cost-management=true || true

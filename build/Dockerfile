@@ -6,9 +6,18 @@ COPY uid_entrypoint.sh /usr/local/bin/uid_entrypoint.sh
 
 USER root
 
+COPY .git /tmp/repo/.git
+RUN dnf -y install git && \
+    git -C /tmp/repo rev-parse HEAD > /tmp/commit && \
+    rm -fr /tmp/repo && \
+    dnf -y remove git && \
+    cat /tmp/commit
+
 ENV TINI_VERSION v0.18.0
-ARG GIT_COMMIT=''
-ENV SOURCE_COMMIT=$GIT_COMMIT
+ARG SOURCE_COMMIT=''
+ENV SOURCE_COMMIT=${SOURCE_COMMIT}
+RUN echo $SOURCE_COMMIT
+
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 # put tini into our path
@@ -20,4 +29,5 @@ RUN chown -R 1001:0 $HOME && \
 
 # run as the user we are
 USER 1000580000
+RUN cp /tmp/commit ${HOME}/commit
 ENTRYPOINT [ "uid_entrypoint.sh" ]
