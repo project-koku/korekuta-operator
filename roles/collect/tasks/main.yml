@@ -207,7 +207,7 @@
 - name: Fail the trusted ca certificate could not be found and certificate validation is enabled
   fail:
     msg: 'The trusted ca certificate could not be found and certificate validation is enabled.'
-  when: trusted_ca_bundle_contents is not defined and (ocp_validate_cert | bool)
+  when: trusted_ca_bundle_contents is not defined
 
 - name: Set download request facts
   set_fact:
