@@ -192,11 +192,6 @@
   set_fact:
     source_commit: "{{ lookup('file', ansible_env.HOME + '/commit') }}"
 
-- name: Obtain the source commit from file
-  set_fact:
-    source_commit: "{{ lookup('file', ansible_env.HOME + '/commit') }}"
-  when: source_commit is not defined or source_commit == ''
-
 - name: debug the source_commit
   debug:
     var: source_commit
