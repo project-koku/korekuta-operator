@@ -143,7 +143,16 @@ make run-locally
 You will see some info level logs about the operator starting up. The operator works by watching for a known resource and then triggering a role based off of the presence of that resource.
 
 ## Building & running the Operator as a pod inside the cluster
+Below are flows for the main development team and for external contributors.
 
+### Development team options
+If you have pushed your changes to a branch within the repository then an associated image branch will have been built in [quay.io/project-koku/korekuta-operator](https://quay.io/project-koku/korekuta-operator). You need only specify the branch you want to deploy the operator with using the following command:
+
+```
+make deploy-operator-dev-branch branch=$GIT_BRANCH
+```
+
+### Contributor options
 To build the cost-mgmt-operator image and push it to a registry, run the following where `QUAY_USERNAME` is your quay username where the image will be pushed:
 
 ```
@@ -154,14 +163,10 @@ Under the quay repository settings, make sure that you change the `Repository Vi
 OpenShift deployment manifests are generated in deploy/operator.yaml. The deployment image in this file needs to be modified from the placeholder REPLACE_IMAGE to the previous built image. To correctly SED replace the image and deploy the Operator, run the following where `QUAY_USERNAME` is the username under which the image has been pushed:
 
 ```
-make sed-replace-deploy-operator username=$QUAY_USERNAME
+make deploy-operator-quay-user username=$QUAY_USERNAME
 ```
 
-Note: If you need to redeploy the operator, but do not need to sed replace the `operator.yaml` you can run:
-
-```
-make deploy-operator
-```
+### Validating Deployment
 
 Verify that the cost-mgmt-operator is up and running:
 
@@ -176,6 +181,12 @@ In order to see the logs from the operator deployment you can run:
 ```
 oc logs -f deployment/cost-mgmt-operator --container ansible
 oc logs -f deployment/cost-mgmt-operator --container operator
+```
+
+Note: If you need to redeploy the operator, but do not need to sed replace the `operator.yaml` you can run:
+
+```
+make deploy-operator
 ```
 
 ## Kicking off the roles
@@ -215,7 +226,7 @@ This should show you the same output as if the role was being ran inside of the 
 After testing, you can cleanup the resources using the following:
 
 ```
-delete-operator
+make delete-operator
 make delete-dependencies-and-resources
 make delete-metering-report-resources
 ```
