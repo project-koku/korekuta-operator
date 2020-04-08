@@ -57,6 +57,12 @@
   when: cost_mgmt_setup.resources
   ignore_errors: true
 
+- name: Format current_month string if less than 10
+  set_fact:
+    current_month: '{{ "0" + (current_month | string) }}'
+  when:
+    - (current_month | int)  < 10
+
 - name: Set current_year
   set_fact:
     current_year: "{{ cost_mgmt_setup.resources[0].spec.current_year | string }}"
