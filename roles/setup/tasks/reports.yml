@@ -14,33 +14,33 @@
 
 # Logic to set evaluate_month based on month_delta
 
-- Set evaluate_month when month_delta is 0
+- name: Set evaluate_month when month_delta is 0
   set_fact:
     evaluate_month: '{{ input_month | int }}'
   when: (month_delta | int) == 0
 
-- Set evaluate_month when month_delta is positive and its not December
+- name: Set evaluate_month when month_delta is positive and its not December
   set_fact:
     evaluate_month: '{{ (input_month | int) + (month_delta | int) }}'
   when:
     - (month_delta | int) > 0
     - (input_month | int) < 12
 
-- Set evaluate_month when month_delta is positive and it is December
+- name: Set evaluate_month when month_delta is positive and it is December
   set_fact:
     evaluate_month: '{{ month_delta | int }}'
   when:
     - (month_delta | int) > 0
     - (input_month | int) == 12
 
-- Set evaluate_month when month_delta is negative and its not January
+- name: Set evaluate_month when month_delta is negative and its not January
   set_fact:
     evaluate_month: '{{ (input_month | int) + (month_delta | int) }}'
   when:
     - (month_delta | int) < 0
     - (input_month | int) > 1
 
-- Set evaluate_month when month_delta is negative and it is January
+- name: Set evaluate_month when month_delta is negative and it is January
   set_fact:
     evaluate_month: '{{ 13 + (month_delta | int) }}'
   when:
