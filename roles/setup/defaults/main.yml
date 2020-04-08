@@ -1,2 +1,8 @@
 ---
 namespace: openshift-metering
+current_day: '{{ ansible_date_time.day | int }}'
+current_month: '{{ ansible_date_time.month | int }}'
+current_year: '{{ ansible_date_time.year | int }}'
+setup_template_path: '/tmp/cost-mgmt-operator-collect'
+setup_template_dir: "{{ lookup('password', '/dev/null chars=ascii_letters') }}"
+setup_delete_after: 'true'

@@ -45,6 +45,12 @@ spec:
               type: string
             upload_wait:
               type: integer
+            current_day:
+              type: integer
+            current_month:
+              type: integer
+            current_year:
+              type: integer
   versions:
     - name: v1alpha1
       served: true

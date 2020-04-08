@@ -1,0 +1,18 @@
+---
+apiVersion: metering.openshift.io/v1alpha1
+kind: Report
+metadata:
+  labels:
+    cost-management: "true"
+  name: cm-openshift-usage-lookback-{{ current_year_month }}
+spec:
+  query: cm-openshift-usage-lookback
+  inputs:
+    - name: CostManagementOpenShiftUsageReportName
+      value: cm-openshift-usage-{{ current_year_month }}
+  runImmediately: true
+  reportingStart: '{{ report_start_year }}-{{ report_start_month }}-26T00:00:00Z'
+  reportingEnd: '{{ report_end_year }}-{{ report_end_month }}-02T00:00:00Z'
+  schedule:
+    period: hourly
+  overwriteExistingData: true

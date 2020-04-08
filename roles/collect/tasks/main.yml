@@ -51,6 +51,28 @@
   when: cost_mgmt_setup.resources
   ignore_errors: true
 
+- name: Set current_month
+  set_fact:
+    current_month: "{{ cost_mgmt_setup.resources[0].spec.current_month | string }}"
+  when: cost_mgmt_setup.resources
+  ignore_errors: true
+
+- name: Format current_month string if less than 10
+  set_fact:
+    current_month: '{{ "0" + (current_month | string) }}'
+  when:
+    - (current_month | int)  < 10
+
+- name: Set current_year
+  set_fact:
+    current_year: "{{ cost_mgmt_setup.resources[0].spec.current_year | string }}"
+  when: cost_mgmt_setup.resources
+  ignore_errors: true
+
+- name: Set monthly suffix for reports
+  set_fact:
+    current_year_month: '{{ (current_year | string )  + (current_month | string) }}'
+
 - name: Obtain metering api info
   k8s_info:
     api_version: v1
@@ -225,7 +247,7 @@
 # this appends the string inside the brackets to the 'api_params' list.
 - name: compile URL query params, append to param list
   set_fact:
-    api_params: "{{ api_params + ['?name='+item+format+namespace] }}"
+    api_params: "{{ api_params + ['?name='+item+current_year_month+format+namespace] }}"
   with_items: "{{ collect_reports }}"
 
 # this appends the string inside the brackets to the 'api_urls' list.
