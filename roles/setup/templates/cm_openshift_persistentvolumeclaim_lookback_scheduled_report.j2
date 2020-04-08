@@ -10,7 +10,7 @@ spec:
   inputs:
     - name: PersistentVolumeClaimUsageReportName
       value: cm-openshift-persistentvolumeclaim-{{ current_year_month }}
-  gracePeriod: 10m  # wait for sub-query to finish
+  runImmediately: true
   reportingStart: '{{ report_start_year }}-{{ report_start_month }}-26T00:00:00Z'
   reportingEnd: '{{ report_end_year }}-{{ report_end_month }}-02T00:00:00Z'
   schedule:
