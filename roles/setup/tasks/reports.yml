@@ -12,39 +12,59 @@
   debug:
     var: input_year
 
-- name: Set evaluate_month
+# Logic to set evaluate_month based on month_delta
+
+- Set evaluate_month when month_delta is 0
+  set_fact:
+    evaluate_month: '{{ input_month | int }}'
+  when: (month_delta | int) == 0
+
+- Set evaluate_month when month_delta is positive and its not December
   set_fact:
     evaluate_month: '{{ (input_month | int) + (month_delta | int) }}'
-    evaluate_year: '{{ input_year | int }}'
-
-- name: Set report_start_year to current year
-  set_fact:
-    report_start_year: '{{ input_year | string }}'
-  when: (evaluate_month | int) > 1
-
-- name: Set report_start_year to previous year if January
-  set_fact:
-    report_start_year: '{{ ((input_year | int) - 1) | string }}'
-    evaluate_year: '{{ ((input_year | int) - 1) }}'
   when:
-    - (evaluate_month | int) < 1
-    - (month_delta | int) == -1
+    - (month_delta | int) > 0
+    - (input_month | int) < 12
 
-- name: Set report_start_month to 11 (November) if January and evaluating previous month
+- Set evaluate_month when month_delta is positive and it is December
   set_fact:
-    report_start_month: '11'
-  when: (evaluate_month | int) == 0
+    evaluate_month: '{{ month_delta | int }}'
+  when:
+    - (month_delta | int) > 0
+    - (input_month | int) == 12
+
+- Set evaluate_month when month_delta is negative and its not January
+  set_fact:
+    evaluate_month: '{{ (input_month | int) + (month_delta | int) }}'
+  when:
+    - (month_delta | int) < 0
+    - (input_month | int) > 1
+
+- Set evaluate_month when month_delta is negative and it is January
+  set_fact:
+    evaluate_month: '{{ 13 + (month_delta | int) }}'
+  when:
+    - (month_delta | int) < 0
+    - (input_month | int) == 1
+
+- name: Set evaluate_month string less than 10
+  set_fact:
+    evaluate_month_str: '{{ "0" + (evaluate_month | string) }}'
+  when:
+    - (evaluate_month | int)  < 10
+
+# Logic to set report_start_month
+
+- name: Set report_start_month to previous month if not January
+  set_fact:
+    report_start_month: '{{ ((evaluate_month | int) - 1) | string }}'
+  when:
+    - (evaluate_month | int) > 1
 
 - name: Set report_start_month to 12 (December) if January
   set_fact:
     report_start_month: '12'
   when: (evaluate_month | int) == 1
-
-- name: Set report_start_month to previous month
-  set_fact:
-    report_start_month: '{{ ((evaluate_month | int) - 1) | string }}'
-  when:
-    - (evaluate_month | int) > 1
 
 - name: Set report_start_month if single digit
   set_fact:
@@ -52,33 +72,17 @@
   when:
     - (report_start_month | int) < 10
 
-- name: Set report_end_year to current year
-  set_fact:
-    report_end_year: '{{ input_year | string }}'
-  when: (evaluate_month | int) <= 12
+# Logic to set report_end_month
 
-- name: Set report_end_year to next year if December
+- name: Set report_end_month to next month if not December
   set_fact:
-    report_end_year: '{{ ((input_year | int) + 1) | string }}'
-    evaluate_year: '{{ ((input_year | int) + 1) }}'
-  when:
-    - (evaluate_month | int) > 12
-    - (month_delta | int) == 1
-
-- name: Set report_end_month to 2 (February) if December and evaluating next month
-  set_fact:
-    report_end_month: '2'
-  when: (evaluate_month | int) == 13
+    report_end_month: '{{ ((evaluate_month | int) + 1) | string }}'
+  when: (evaluate_month | int) < 12
 
 - name: Set report_end_month to 1 (January) if December
   set_fact:
     report_end_month: '1'
   when: (evaluate_month | int) == 12
-
-- name: Set report_end_month
-  set_fact:
-    report_end_month: '{{ ((evaluate_month | int) + 1) | string }}'
-  when: (evaluate_month | int) < 12
 
 - name: Set report_end_month if single digit
   set_fact:
@@ -86,11 +90,54 @@
   when:
     - (report_end_month | int)  < 10
 
-- name: Set evaluate_month string less than 10
+# Logic to set evaluate_year based on month delta
+
+- name: Set evaluate_year to current year if month delta is 0 or Feb-Nov
   set_fact:
-    evaluate_month_str: '{{ "0" + (evaluate_month | string) }}'
+    evaluate_year: '{{ input_year | int }}'
+  when: (month_delta | int) == 0 or ((evaluate_month | int) > 1 and (evaluate_month | int) < 12)
+
+- name: Set evaluate_year to following year if January and month_delta is 1
+  set_fact:
+    evaluate_year: '{{ ((input_year | int) + 1) | string }}'
   when:
-    - (evaluate_month | int)  < 10
+    - (month_delta | int) > 0
+    - (evaluate_month | int) == 1
+
+- name: Set evaluate_year to previous year if December and month_delta is -1
+  set_fact:
+    evaluate_year: '{{ ((input_year | int) - 1) | string }}'
+  when:
+    - (month_delta | int) < 0
+    - (evaluate_month | int) == 12
+
+# Logic to set report_start_year
+
+- name: Set report_start_year to evaluate year if Feb-Dec
+  set_fact:
+    report_start_year: '{{ evaluate_year | string }}'
+  when: (evaluate_month | int) > 1
+
+- name: Set report_start_year to previous year if January
+  set_fact:
+    report_start_year: '{{ ((evaluate_year | int) - 1) | string }}'
+  when:
+    - (evaluate_month | int) == 1
+
+# Logic to set report_end_year
+
+- name: Set report_end_year to current year if Jan-Nov
+  set_fact:
+    report_end_year: '{{ evaluate_year | string }}'
+  when: (evaluate_month | int) < 12
+
+- name: Set report_end_year to next year if December
+  set_fact:
+    report_end_year: '{{ ((evaluate_year | int) + 1) | string }}'
+  when:
+    - (evaluate_month | int) == 12
+
+# cast values to a string
 
 - name: Set evaluate_month string
   set_fact:
