@@ -13,7 +13,7 @@ metadata:
             "name": "cost-mgmt-data-example"
           },
           "spec": {
-            "size": 3
+            "size": 1
           }
         },
         {
