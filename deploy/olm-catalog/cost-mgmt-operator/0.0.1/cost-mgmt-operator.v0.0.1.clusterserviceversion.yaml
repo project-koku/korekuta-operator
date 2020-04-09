@@ -105,7 +105,7 @@ spec:
     ## Features and Capabilities
 
     The `cost-mgmt-operator` does two things:
-    1. Utilizes openshift-metering to create cost and usage reports specific to cost management.
+    1. Utilizes operator-metering to create cost and usage reports specific to cost management.
     2. Collects and packages these reports inside of a tarball which gets uploaded to cost management through [cloud.redhat.com](https://cloud.redhat.com/).
 
     ## Configuring the cost management operator
@@ -126,11 +126,11 @@ spec:
             kubernetes.io/service-account.name: cost-mgmt-operator
         data:
           username: >-
-            Zm9v
+            Y2xvdWQucmVkaGF0LmNvbSB1c2VybmFtZQ==
           password: >-
-            Zm9v
+            Y2xvdWQucmVkaGF0LmNvbSBwYXNzd29yZA==
           token: >-
-            Zm9v
+            Y2xvdWQucmVkaGF0LmNvbSB0b2tlbg==
         ```
     2. Choose a name for your authentication secret and replace the metadata.name with it.
     3. Decide if you are going to use basic authentication or token authentication to upload the cost usage reports to cost management. The default authentication method is token authentication.
