@@ -95,7 +95,7 @@ spec:
       kind: HiveTable
       name: hivetables.metering.openshift.io
       version: v1
-  description:  |-
+  description: |-
 
     ## Introduction
 
