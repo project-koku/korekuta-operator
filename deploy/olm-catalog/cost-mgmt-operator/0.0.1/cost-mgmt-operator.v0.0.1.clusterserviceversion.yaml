@@ -33,7 +33,7 @@ metadata:
     capabilities: Basic Install
     categories: "Monitoring"
     certified: 'false'
-    containerImage: quay.io/repository/abaiken/cost-mgmt-operator
+    containerImage: quay.io/repository/project-koku/cost-mgmt-operator:v0.0.1
     createdAt: 2020-03-26T2:38:59Z
     support: Cost Managment
     repository: https://github.com/project-koku/korekuta-operator
@@ -241,7 +241,7 @@ spec:
                 - /usr/local/bin/ao-logs
                 - /tmp/ansible-operator/runner
                 - stdout
-                image: quay.io/abaiken/cost-mgmt-operator:v0.0.1
+                image: quay.io/project-koku/cost-mgmt-operator:v0.0.1
                 imagePullPolicy: Always
                 name: ansible
                 resources: {}
@@ -264,7 +264,7 @@ spec:
                   value: cost-mgmt-operator
                 - name: ANSIBLE_GATHERING
                   value: explicit
-                image: quay.io/abaiken/cost-mgmt-operator:v0.0.1
+                image: quay.io/project-koku/cost-mgmt-operator:v0.0.1
                 imagePullPolicy: Always
                 name: operator
                 resources: {}
