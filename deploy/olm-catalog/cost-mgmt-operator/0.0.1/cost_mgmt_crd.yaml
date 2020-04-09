@@ -5,6 +5,7 @@ metadata:
   name: costmanagements.cost-mgmt.openshift.io
 spec:
   group: cost-mgmt.openshift.io
+  version: v1alpha1
   names:
     kind: CostManagement
     listKind: CostManagementList

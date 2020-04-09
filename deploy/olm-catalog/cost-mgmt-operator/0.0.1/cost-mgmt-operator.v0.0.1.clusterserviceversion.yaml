@@ -11,7 +11,7 @@ metadata:
           "kind": "CostManagementData",
           "metadata": {
             "name": "cost-mgmt-data-example"
-          }
+          },
           "spec": {
             "size": 3
           }
@@ -32,6 +32,7 @@ metadata:
       ]
     capabilities: Basic Install
     categories: "Monitoring"
+    certified: 'false'
     containerImage: quay.io/repository/abaiken/cost-mgmt-operator
     createdAt: 2020-03-26T2:38:59Z
     support: Cost Managment
