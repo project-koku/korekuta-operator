@@ -134,7 +134,19 @@ spec:
         ```
     2. Choose a name for your authentication secret and replace the metadata.name with it.
     3. Decide if you are going to use basic authentication or token authentication to upload the cost usage reports to cost management. The default authentication method is token authentication.
-        * To use token authentication, edit the secret to replace the token value with your token associated with cloud.redhat.com.
+        * To use token authentication, first obtain the correct auth token and then edit the secret to replace the token value by completing the following steps:
+            * Install [jq](https://stedolan.github.io/jq/download/)
+            * Change to the `openshift-config` namespace:
+
+                ```
+                $ oc project openshift-config
+                ```
+
+            * Replace the token value with the auth token for cloud.openshift.com. You can obtain the auth token by running the following:
+
+                ```
+                $ oc get secret pull-secret -o "jsonpath={.data.\.dockerconfigjson}" | base64 --decode | jq '.auths."cloud.openshift.com".auth'
+                ```
         * To use basic authentication, edit the secret to replace the username and password values with your base64 encoded username and password for connecting to cloud.redhat.com.
 
     4. Deploy the secret to your openshift cluster inside of the `openshift-metering` namespace:
