@@ -12,6 +12,9 @@ metadata:
           "metadata": {
             "name": "cost-mgmt-data-example"
           }
+          "spec": {
+            "size": 3
+          }
         },
         {
           "apiVersion": "cost-mgmt.openshift.io/v1alpha1",
@@ -104,7 +107,7 @@ spec:
     1. Utilizes openshift-metering to create cost and usage reports specific to cost management.
     2. Collects and packages these reports inside of a tarball which gets uploaded to cost management through [cloud.redhat.com](https://cloud.redhat.com/).
 
-    ## Configuring the `cost-mgmt-operator`
+    ## Configuring the cost management operator
 
     ### Configuring authentication
     An authentication secret must exist inside of the `openshift-metering` project for uploading to [cloud.redhat.com](https://cloud.redhat.com/).
@@ -141,7 +144,12 @@ spec:
 
     For both methods of authentication, the name of the secret should match the authentication_secret_name set in the CostManagement custom resource that is configured in the next section.
 
-    ### Configuring the Operator
+    ### Configuring `operator-metering`
+
+    The `cost-mgmt-operator` installs `operator-metering` as a dependency. It utilizes [operator-metering](https://github.com/operator-framework/operator-metering) to create, collect, package, and upload cost and usage reports to cost management. In order for metering to work properly, you must configure it:
+    1. Configure `operator-metering` by following the [documentation](https://docs.openshift.com/container-platform/4.3/metering/configuring_metering/metering-about-configuring.html) to create a MeteringConfig resource.
+
+    ### Configuring the `cost-mgmt-operator`
 
     Create the CostManagement and CostManagementData custom resources to provide the necessary configuration for your Operator. Creating these resources will configure the Operator as well as start the roles that create the resources to obtain the cost and usage reports. The cost usage reports take about an hour to run and are collected, packaged, and uploaded every 6 hours.
 
