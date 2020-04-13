@@ -3,3 +3,6 @@
 
 # openshift/kubernetes folders
 molecule/test-local/.kube/
+
+# testing directory for local development to modify openshift resources
+testing/
