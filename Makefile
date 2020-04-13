@@ -34,42 +34,42 @@ build-operator-image:
 	docker push quay.io/$(username)/cost-mgmt-operator:v0.0.1
 
 deploy-operator:
-	oc create -f deploy/operator.yaml
+	oc create -f testing/operator.yaml
 
 deploy-operator-quay-user:
-	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/$(username)/cost-mgmt-operator:v0.0.1|g' deploy/operator.yaml
+	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/$(username)/cost-mgmt-operator:v0.0.1|g' testing/operator.yaml
 	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" deploy/operator.yaml
-	oc create -f deploy/operator.yaml
+	oc create -f testing/operator.yaml
 
 deploy-operator-dev-branch:
-	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/project-koku/korekuta-operator:$(branch)|g' deploy/operator.yaml
+	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/project-koku/korekuta-operator:$(branch)|g' testing/operator.yaml
 	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" deploy/operator.yaml
-	oc create -f deploy/operator.yaml
+	oc create -f testing/operator.yaml
 
 deploy-dependencies:
 	oc create -f deploy/crds/cost_mgmt_crd.yaml || true
 	oc create -f deploy/crds/cost_mgmt_data_crd.yaml || true
-	oc create -f deploy/crds/authentication_secret.yaml
+	oc create -f testing/authentication_secret.yaml
 	oc create -f deploy/service_account.yaml
 	oc create -f deploy/role.yaml
 	oc create -f deploy/role_binding.yaml
 
 deploy-custom-resources:
-	oc create -f deploy/crds/cost_mgmt_cr.yaml
+	oc create -f testing/cost_mgmt_cr.yaml
 	oc create -f deploy/crds/cost_mgmt_data_cr.yaml
 
 delete-dependencies-and-resources:
-	oc create -f deploy/crds/cost_mgmt_cr.yaml
-	oc create -f deploy/crds/cost_mgmt_data_cr.yaml
+	oc delete -f testing/cost_mgmt_cr.yaml
+	oc delete -f deploy/crds/cost_mgmt_data_cr.yaml
 	oc delete -f deploy/crds/cost_mgmt_crd.yaml
 	oc delete -f deploy/crds/cost_mgmt_data_crd.yaml
-	oc delete -f deploy/crds/authentication_secret.yaml
+	oc delete -f testing/authentication_secret.yaml
 	oc delete -f deploy/service_account.yaml
 	oc delete -f deploy/role.yaml
 	oc delete -f deploy/role_binding.yaml
 
 delete-operator:
-	oc delete -f deploy/operator.yaml
+	oc delete -f testing/operator.yaml
 
 delete-metering-report-resources:
 	oc delete report cm-openshift-node-labels || true

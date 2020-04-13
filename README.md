@@ -60,11 +60,11 @@ Decide if you are going to use `basic` authentication or `token` authentication 
 
 #### Token authentication
 
-The default authentication method is token authentication. Inside of the cluster in the `openshift-config` namespace, there is a secret called `pull-secret` which has a `data` section that contains a `.dockerconfigjson`. In the `.dockerconfigjson` you need to grab the `auth` value associated with `cloud.openshift.com`. Edit the secret found at [deploy/crds/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/authentication_secret.yaml) to replace the token value with the `auth` value associated with `cloud.openshift.com`.
+The default authentication method is token authentication. Inside of the cluster in the `openshift-config` namespace, there is a secret called `pull-secret` which has a `data` section that contains a `.dockerconfigjson`. In the `.dockerconfigjson` you need to grab the `auth` value associated with `cloud.openshift.com`. Edit the secret found at [testing/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/authentication_secret.yaml) to replace the token value with the `auth` value associated with `cloud.openshift.com`.
 
 #### Basic authentication
 
-Since basic authentication is not the default, we have to specify that we want to use it inside our our CostManagement custom resource. Edit the resource at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml) to add an authentication value under the spec. It should look like the following:
+Since basic authentication is not the default, we have to specify that we want to use it inside our our CostManagement custom resource. Edit the resource at [testing/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/cost_mgmt_cr.yaml) to add an authentication value under the spec. It should look like the following:
 
 ```
 ---
@@ -81,14 +81,14 @@ spec:
   authentication: 'basic'
 ```
 
-Next, edit the secret found at [deploy/crds/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/authentication_secret.yaml) to replace the username and password values with your base64 encoded username and password for connecting to [cloud.redhat.com](https://cloud.redhat.com/).
+Next, edit the secret found at [testing/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/authentication_secret.yaml) to replace the username and password values with your base64 encoded username and password for connecting to [cloud.redhat.com](https://cloud.redhat.com/).
 
-For both methods of authentication, the name of the secret found at [deploy/crds/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/authentication_secret.yaml) should match the `authentication_secret_name` set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml).
+For both methods of authentication, the name of the secret found at [testing/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/authentication_secret.yaml) should match the `authentication_secret_name` set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml).
 
 
 ### Operator Configuration
 
-The `clusterID` and `reporting_operator_token_name` must be set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml). Change the `clusterID` value to your cluster ID. Change the `reporting_operator_token_name` to be the name of the `reporting-operator-token` secret found inside of the `openshift-metering` namespace. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your reporting operator token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `CostManagement` custom resource should look like the following:
+The `clusterID` and `reporting_operator_token_name` must be set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/cost_mgmt_cr.yaml). Change the `clusterID` value to your cluster ID. Change the `reporting_operator_token_name` to be the name of the `reporting-operator-token` secret found inside of the `openshift-metering` namespace. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your reporting operator token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `CostManagement` custom resource should look like the following:
 
 ```
 ---
@@ -230,3 +230,13 @@ make delete-operator
 make delete-dependencies-and-resources
 make delete-metering-report-resources
 ```
+
+## Community Operator Release Process
+
+To release a new version of the `cost-mgmt-operator`, you must first update the bundle with the release changes and do a pull request against the [community-operators repo](https://github.com/operator-framework/community-operators).
+
+1. To update the bundle, view the operator-sdk olm-catalog [documentation](https://docs.openshift.com/container-platform/4.1/applications/operator_sdk/osdk-generating-csvs.html#osdk-how-csv-gen-works_osdk-generating-csvs) on generating and updating ClusterServiceVersions (CSVs).
+
+2. After all changes to the operator have been merged into master, cut a release with the new version tag. This will kick start an quay image build with the new release version [here](https://quay.io/repository/project-koku/cost-mgmt-operator?tab=tags). Use this image to replace the previous image in the ClusterServiceVersion. 
+
+3. After generating the bundle, submit a pull request with the updated bundle to the `community-operators` repo. Before submitting your pull request make sure that you have read and completed the community [contributing guidelines](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md) and [checklist](https://github.com/operator-framework/community-operators/blob/master/docs/pull_request_template.md).

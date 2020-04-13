@@ -1,0 +1,11 @@
+---
+
+apiVersion: cost-mgmt.openshift.io/v1alpha1
+kind: CostManagement
+metadata:
+  name: cost-mgmt-setup
+spec:
+  clusterID: 'cluster-id-placeholder'
+  reporting_operator_token_name: 'reporting-operator-token-placeholder'
+  validate_cert: 'false'
+  authentication_secret_name: 'auth-secret-name-placeholder'
