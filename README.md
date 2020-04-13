@@ -38,7 +38,9 @@ To activate the virtual environment run
 pipenv shell
 ```
 
-Finally, install the Operator SDK CLI using the following [documentation](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md).
+Next, install the Operator SDK CLI using the following [documentation](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md).
+
+Finally, install [jq](https://stedolan.github.io/jq/download/).
 
 ## Testing
 
@@ -60,52 +62,31 @@ Decide if you are going to use `basic` authentication or `token` authentication 
 
 #### Token authentication
 
-The default authentication method is token authentication. Inside of the cluster in the `openshift-config` namespace, there is a secret called `pull-secret` which has a `data` section that contains a `.dockerconfigjson`. In the `.dockerconfigjson` you need to grab the `auth` value associated with `cloud.openshift.com`. Edit the secret found at [testing/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/authentication_secret.yaml) to replace the token value with the `auth` value associated with `cloud.openshift.com`.
+The default authentication method is token authentication. Inside of the cluster in the `openshift-config` namespace, there is a secret called `pull-secret` which has a `data` section that contains a `.dockerconfigjson`. In the `.dockerconfigjson` you need to grab the `auth` value associated with `cloud.openshift.com`. You can grab this token and configure the authentication secret by running the following command:
+
+```
+make setup-auth
+```
 
 #### Basic authentication
 
-Since basic authentication is not the default, we have to specify that we want to use it inside our our CostManagement custom resource. Edit the resource at [testing/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/cost_mgmt_cr.yaml) to add an authentication value under the spec. It should look like the following:
+To use basic authentication, you must provide your username and password values for connecting to  [cloud.redhat.com](https://cloud.redhat.com/). To configure your authentication secret with your username and password, run the following:
 
 ```
----
-
-apiVersion: cost-mgmt.openshift.io/v1alpha1
-kind: CostManagement
-metadata:
-  name: cost-mgmt-setup
-spec:
-  clusterID: 'cluster-id-placeholder'
-  reporting_operator_token_name: 'reporting-operator-token-placeholder'
-  validate_cert: 'false'
-  authentication_secret_name: 'auth-secret-name-placeholder'
-  authentication: 'basic'
+make setup-auth username=YOUR_USERNAME password=YOUR_PASSWORD
 ```
 
-Next, edit the secret found at [testing/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/authentication_secret.yaml) to replace the username and password values with your base64 encoded username and password for connecting to [cloud.redhat.com](https://cloud.redhat.com/).
-
-For both methods of authentication, the name of the secret found at [testing/authentication_secret.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/authentication_secret.yaml) should match the `authentication_secret_name` set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/deploy/crds/cost_mgmt_cr.yaml).
-
+Note: `YOUR_USERNAME` is your unencoded username & `YOUR_PASSWORD` is your unencoded password.
 
 ### Operator Configuration
 
-The `clusterID` and `reporting_operator_token_name` must be set in the CostManagement custom resource found at [deploy/crds/cost_mgmt_cr.yaml](https://github.com/project-koku/korekuta-operator/blob/master/testing/cost_mgmt_cr.yaml). Change the `clusterID` value to your cluster ID. Change the `reporting_operator_token_name` to be the name of the `reporting-operator-token` secret found inside of the `openshift-metering` namespace. For example, if your cluster ID is `123a45b6-cd8e-9101-112f-g131415hi1jk`, your reporting operator token name is `reporting-operator-token-123ab`, you want to use basic auth and the name of your authentication secret is `basic_auth_creds-123ab`, the `CostManagement` custom resource should look like the following:
+The `cost-mgmt-operator` requires you to provide your cluster ID and reporting operator token name. Additionally, if you are using basic authentication, you must also specify that the authentication type is `basic`. To configure your operator, run the following:
 
 ```
----
-
-apiVersion: cost-mgmt.openshift.io/v1alpha1
-kind: CostManagement
-metadata:
-  name: cost-mgmt-setup
-spec:
-  clusterID: '123a45b6-cd8e-9101-112f-g131415hi1jk'
-  reporting_operator_token_name: 'reporting-operator-token-123ab'
-  validate_cert: 'false'
-  authentication: 'basic'
-  authentication_secret_name: 'basic_auth_creds-123ab'
+make setup-operator clusterID=CLUSTER_ID report_token_name=REPORTING_OPERATOR_TOKEN_NAME authentication=basic
 ```
 
-Note: You can also specify the `ingress_url` inside of the CostManagement CR spec. This will allow you to upload to different environments.
+Note: If you are using `token` authentication, you can disregard the authentication parameter. There are two additional optional parameters, `validate_cert` and `ingress_url`, which you can learn more about by running `make help`.
 
 ### Creating the dependencies
 
@@ -237,6 +218,6 @@ To release a new version of the `cost-mgmt-operator`, you must first update the 
 
 1. To update the bundle, view the operator-sdk olm-catalog [documentation](https://docs.openshift.com/container-platform/4.1/applications/operator_sdk/osdk-generating-csvs.html#osdk-how-csv-gen-works_osdk-generating-csvs) on generating and updating ClusterServiceVersions (CSVs).
 
-2. After all changes to the operator have been merged into master, cut a release with the new version tag. This will kick start an quay image build with the new release version [here](https://quay.io/repository/project-koku/cost-mgmt-operator?tab=tags). Use this image to replace the previous image in the ClusterServiceVersion. 
+2. After all changes to the operator have been merged into master, cut a release with the new version tag. This will kick start an quay image build with the new release version [here](https://quay.io/repository/project-koku/cost-mgmt-operator?tab=tags). Use this image to replace the previous image in the ClusterServiceVersion.
 
 3. After generating the bundle, submit a pull request with the updated bundle to the `community-operators` repo. Before submitting your pull request make sure that you have read and completed the community [contributing guidelines](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md) and [checklist](https://github.com/operator-framework/community-operators/blob/master/docs/pull_request_template.md).
