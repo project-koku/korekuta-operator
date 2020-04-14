@@ -44,31 +44,31 @@ build-operator-image:
 	docker push quay.io/$(username)/cost-mgmt-operator:v0.0.1
 
 deploy-operator:
-	oc create -f testing/operator.yaml
+	oc apply -f testing/operator.yaml
 
 deploy-operator-quay-user:
 	cp deploy/operator.yaml testing/operator.yaml
 	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/$(username)/cost-mgmt-operator:v0.0.1|g' testing/operator.yaml
-	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" deploy/operator.yaml
-	oc create -f testing/operator.yaml
+	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" testing/operator.yaml
+	oc apply -f testing/operator.yaml
 
 deploy-operator-dev-branch:
 	cp deploy/operator.yaml testing/operator.yaml
 	sed -i "" 's|{{ REPLACE_IMAGE }}|quay.io/project-koku/korekuta-operator:$(branch)|g' testing/operator.yaml
-	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" deploy/operator.yaml
-	oc create -f testing/operator.yaml
+	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" testing/operator.yaml
+	oc apply -f testing/operator.yaml
 
 deploy-dependencies:
-	oc create -f deploy/crds/cost_mgmt_crd.yaml || true
-	oc create -f deploy/crds/cost_mgmt_data_crd.yaml || true
-	oc create -f testing/authentication_secret.yaml
-	oc create -f deploy/service_account.yaml
-	oc create -f deploy/role.yaml
-	oc create -f deploy/role_binding.yaml
+	oc apply -f deploy/crds/cost_mgmt_crd.yaml || true
+	oc apply -f deploy/crds/cost_mgmt_data_crd.yaml || true
+	oc apply -f testing/authentication_secret.yaml
+	oc apply -f deploy/service_account.yaml
+	oc apply -f deploy/role.yaml
+	oc apply -f deploy/role_binding.yaml
 
 deploy-custom-resources:
-	oc create -f testing/cost_mgmt_cr.yaml
-	oc create -f deploy/crds/cost_mgmt_data_cr.yaml
+	oc apply -f testing/cost_mgmt_cr.yaml
+	oc apply -f deploy/crds/cost_mgmt_data_cr.yaml
 
 delete-dependencies-and-resources:
 	oc delete -f testing/cost_mgmt_cr.yaml
@@ -93,11 +93,12 @@ get-auth-token:
 	@oc get secret pull-secret -o "jsonpath={.data.\.dockerconfigjson}" | base64 --decode | jq '.auths."cloud.openshift.com".auth'
 	@oc project openshift-metering > /dev/null
 
+# replaces the username and password with your base64 encoded username and password and looks up the token value for you
 setup-auth:
 	@cp deploy/crds/authentication_secret.yaml testing/authentication_secret.yaml
-	@sed -i "" 's/Y2xvdWQucmVkaGF0LmNvbSB1c2VybmFtZQ==/$(shell printf "$(shell echo $(or $(username),cloud.redhat.com username))" | openssl base64)/g' testing/authentication_secret.yaml
-	@sed -i "" 's/Y2xvdWQucmVkaGF0LmNvbSBwYXNzd29yZA==/$(shell printf "$(shell echo $(or $(password),cloud.redhat.com password))" | openssl base64)/g' testing/authentication_secret.yaml
-	@sed -i "" 's/Y2xvdWQucmVkaGF0LmNvbSB0b2tlbg==/$(shell $(MAKE) get-auth-token)/g' testing/authentication_secret.yaml
+	@sed -i "" 's/Y2xvdWQucmVkaGF0LmNvbSB1c2VybmFtZQ==/$(shell printf "$(shell echo $(or $(username),cloud.redhat.com username))" | base64)/g' testing/authentication_secret.yaml
+	@sed -i "" 's/Y2xvdWQucmVkaGF0LmNvbSBwYXNzd29yZA==/$(shell printf "$(shell echo $(or $(password),cloud.redhat.com password))" | base64)/g' testing/authentication_secret.yaml
+	@sed -i "" 's/Y2xvdWQucmVkaGF0LmNvbSB0b2tlbg==/$(shell echo $(shell $(MAKE) get-auth-token))/g' testing/authentication_secret.yaml
 
 setup-operator:
 	@cp deploy/crds/cost_mgmt_cr.yaml testing/cost_mgmt_cr.yaml
