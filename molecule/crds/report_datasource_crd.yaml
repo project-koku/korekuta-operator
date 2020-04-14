@@ -1,0 +1,173 @@
+kind: CustomResourceDefinition
+apiVersion: apiextensions.k8s.io/v1beta1
+metadata:
+  name: reportdatasources.metering.openshift.io
+  selfLink: >-
+    /apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/reportdatasources.metering.openshift.io
+  uid: 2ae26160-782d-11ea-9d21-02ef9859b8f0
+  generation: 1
+spec:
+  group: metering.openshift.io
+  version: v1
+  names:
+    plural: reportdatasources
+    singular: reportdatasource
+    shortNames:
+      - datasource
+      - datasources
+    kind: ReportDataSource
+    listKind: ReportDataSourceList
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      type: object
+      required:
+        - spec
+      properties:
+        spec:
+          type: object
+          oneOf:
+            - required:
+                - prometheusMetricsImporter
+            - required:
+                - reportQueryView
+            - required:
+                - awsBilling
+            - required:
+                - prestoTable
+          properties:
+            awsBilling:
+              type: object
+              required:
+                - source
+              properties:
+                source:
+                  type: object
+                  required:
+                    - bucket
+                    - region
+                  properties:
+                    bucket:
+                      type: string
+                      minLength: 1
+                    prefix:
+                      type: string
+                    region:
+                      type: string
+                      minLength: 1
+            prestoTable:
+              type: object
+              required:
+                - tableRef
+              properties:
+                tableRef:
+                  type: object
+                  required:
+                    - name
+                  properties:
+                    name:
+                      type: string
+                      minLength: 1
+            prometheusMetricsImporter:
+              type: object
+              required:
+                - query
+              properties:
+                prometheusConfig:
+                  type: object
+                  required:
+                    - url
+                  properties:
+                    url:
+                      type: string
+                      format: uri
+                query:
+                  type: string
+                  minLength: 1
+                storage:
+                  type: object
+                  required:
+                    - storageLocationName
+                  properties:
+                    storageLocationName:
+                      type: string
+                      minLength: 1
+            reportQueryView:
+              type: object
+              required:
+                - queryName
+              properties:
+                inputs:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - value
+                    properties:
+                      name:
+                        type: string
+                        minLength: 1
+                      value: {}
+                queryName:
+                  type: string
+                  minLength: 1
+                storage:
+                  type: object
+                  required:
+                    - storageLocationName
+                  properties:
+                    storageLocationName:
+                      type: string
+                      minLength: 1
+  versions:
+    - name: v1
+      served: true
+      storage: true
+    - name: v1alpha1
+      served: true
+      storage: false
+  additionalPrinterColumns:
+    - name: Earliest Metric
+      type: string
+      JSONPath: .status.prometheusMetricsImportStatus.earliestImportedMetricTime
+    - name: Newest Metric
+      type: string
+      JSONPath: .status.prometheusMetricsImportStatus.newestImportedMetricTime
+    - name: Import Start
+      type: string
+      JSONPath: .status.prometheusMetricsImportStatus.importDataStartTime
+    - name: Import End
+      type: string
+      JSONPath: .status.prometheusMetricsImportStatus.importDataEndTime
+    - name: Last Import Time
+      type: string
+      JSONPath: .status.prometheusMetricsImportStatus.lastImportTime
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
+  conversion:
+    strategy: None
+status:
+  conditions:
+    - type: NamesAccepted
+      status: 'True'
+      lastTransitionTime: '2020-04-06T17:36:37Z'
+      reason: NoConflicts
+      message: no conflicts found
+    - type: Established
+      status: 'True'
+      lastTransitionTime: null
+      reason: InitialNamesAccepted
+      message: the initial names have been accepted
+  acceptedNames:
+    plural: reportdatasources
+    singular: reportdatasource
+    shortNames:
+      - datasource
+      - datasources
+    kind: ReportDataSource
+    listKind: ReportDataSourceList
+  storedVersions:
+    - v1
