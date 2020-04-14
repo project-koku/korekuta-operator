@@ -64,6 +64,12 @@
       'crds/metering_route_cr.yaml'])) | from_yaml }}"
     metering_route_crd: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/metering_route_crd.yaml'])) | from_yaml }}"
+    report_crd: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/report_crd.yaml'])) | from_yaml }}"
+    report_query_crd: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/report_query_crd.yaml'])) | from_yaml }}"
+    report_datasource_crd: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/report_datasource_crd.yaml'])) | from_yaml }}"
     reporting_operator_metering_token: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/reporting_operator_token.yaml'])) | from_yaml }}"
     trusted_ca_config: "{{ lookup('file', '/'.join([molecule_dir,
@@ -283,6 +289,24 @@
             namespace: '{{ namespace }}'
             definition: '{{ metering_route_crd }}'
 
+        - name: Create the report crd
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ report_crd }}'
+
+        - name: Create the report query crd
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ report_query_crd }}'
+
+        - name: Create the report datasource crd
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ report_datasource_crd }}'
+
         - name: Create the metering route cr for testing
           k8s:
             state: present
@@ -333,8 +357,8 @@
             name: '{{ cm_cr.metadata.name }}'
           register: cr
           until:
-            - "'All items completed' in
-              (cr | json_query('resources[].status.conditions[].message'))"
+            - "'Successful' in (cr |
+              json_query('resources[].status.conditions[].reason'))"
           delay: 12
           retries: 10
 
@@ -461,9 +485,10 @@
   vars:
     ansible_python_interpreter: '{{ ansible_playbook_python }}'
     deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
+    molecule_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule"
     cm_data_cr: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
-    authentication_secret: "{{ lookup('file', '/'.join([deploy_dir,
+    authentication_secret: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/authentication_secret.yaml'])) | from_yaml }}"
     REPLACE_IMAGE: cost-mgmt.openshift.io/cost-mgmt-operator:testing
   tasks:

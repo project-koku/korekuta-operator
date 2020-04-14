@@ -1,0 +1,181 @@
+kind: CustomResourceDefinition
+apiVersion: apiextensions.k8s.io/v1beta1
+metadata:
+  name: reportqueries.metering.openshift.io
+  selfLink: >-
+    /apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/reportqueries.metering.openshift.io
+  uid: 41d2909c-7679-11ea-ae2b-02ef9859b8f0
+  generation: 1
+spec:
+  group: metering.openshift.io
+  version: v1
+  names:
+    plural: reportqueries
+    singular: reportquery
+    shortNames:
+      - rq
+    kind: ReportQuery
+    listKind: ReportQueryList
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      type: object
+      required:
+        - spec
+      properties:
+        spec:
+          type: object
+          required:
+            - columns
+            - query
+          properties:
+            columns:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required:
+                  - name
+                  - type
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                  tableHidden:
+                    type: boolean
+                  type:
+                    type: string
+                    enum:
+                      - BOOLEAN
+                      - TINYINT
+                      - SMALLINT
+                      - INTEGER
+                      - BIGINT
+                      - REAL
+                      - DOUBLE
+                      - DECIMAL
+                      - VARCHAR
+                      - CHAR
+                      - VARBINARY
+                      - JSON
+                      - DATE
+                      - TIME
+                      - TIMESTAMP
+                      - ARRAY
+                      - MAP
+                      - 'MAP<VARCHAR, VARCHAR>'
+                      - 'MAP<VARCHAR, INT>'
+                      - 'MAP<INT, INT>'
+                      - 'MAP<INT, VARCHAR>'
+                      - ROW
+                      - IPADDRESS
+                      - UUID
+                      - HYPERLOGLOG
+                      - P4HYPERLOGLOG
+                      - QDIGEST
+                      - boolean
+                      - tinyint
+                      - smallint
+                      - integer
+                      - bigint
+                      - real
+                      - double
+                      - decimal
+                      - varchar
+                      - char
+                      - varbinary
+                      - json
+                      - date
+                      - time
+                      - timestamp
+                      - array
+                      - map
+                      - 'map<varchar, varchar>'
+                      - 'map<varchar, int>'
+                      - 'map<int, int>'
+                      - 'map<int, varchar>'
+                      - row
+                      - ipaddress
+                      - uuid
+                      - hyperloglog
+                      - p4hyperloglog
+                      - qdigest
+                  unit:
+                    type: string
+                    enum:
+                      - date
+                      - kubernetes_pod
+                      - kubernetes_persistentvolumeclaim
+                      - kubernetes_persistentvolume
+                      - kubernetes_storageclass
+                      - kubernetes_namespace
+                      - kubernetes_node
+                      - bytes
+                      - byte_seconds
+                      - time
+                      - cpu_core_seconds
+                      - cpu_cores
+                      - memory_bytes
+                      - memory_byte_seconds
+                      - seconds
+            inputs:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required:
+                  - name
+                properties:
+                  default: {}
+                  name:
+                    type: string
+                    minLength: 1
+                  required:
+                    type: boolean
+                  type:
+                    type: string
+                    enum:
+                      - string
+                      - integer
+                      - time
+                      - ReportDataSource
+                      - ReportQuery
+                      - Report
+            query:
+              type: string
+              minLength: 1
+              pattern: '[Ss][Ee][Ll][Ee][Cc][Tt]\s'
+  versions:
+    - name: v1
+      served: true
+      storage: true
+    - name: v1alpha1
+      served: true
+      storage: false
+  additionalPrinterColumns:
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
+  conversion:
+    strategy: None
+status:
+  conditions:
+    - type: NamesAccepted
+      status: 'True'
+      lastTransitionTime: '2020-04-04T13:36:15Z'
+      reason: NoConflicts
+      message: no conflicts found
+    - type: Established
+      status: 'True'
+      lastTransitionTime: null
+      reason: InitialNamesAccepted
+      message: the initial names have been accepted
+  acceptedNames:
+    plural: reportqueries
+    singular: reportquery
+    shortNames:
+      - rq
+    kind: ReportQuery
+    listKind: ReportQueryList
+  storedVersions:
+    - v1

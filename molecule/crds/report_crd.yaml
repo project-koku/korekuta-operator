@@ -1,0 +1,302 @@
+kind: CustomResourceDefinition
+apiVersion: apiextensions.k8s.io/v1beta1
+metadata:
+  name: reports.metering.openshift.io
+  selfLink: >-
+    /apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/reports.metering.openshift.io
+  uid: 2ae1d008-782d-11ea-9d21-02ef9859b8f0
+  generation: 1
+spec:
+  group: metering.openshift.io
+  version: v1
+  names:
+    plural: reports
+    singular: report
+    kind: Report
+    listKind: ReportList
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      type: object
+      required:
+        - spec
+      properties:
+        spec:
+          type: object
+          required:
+            - query
+          anyOf:
+            - type: object
+              required:
+                - query
+                - reportingStart
+                - reportingEnd
+            - type: object
+              required:
+                - query
+                - runImmediately
+                - reportingEnd
+            - type: object
+              required:
+                - query
+                - schedule
+          properties:
+            inputs:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required:
+                  - name
+                  - value
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                  value: {}
+            query:
+              type: string
+              minLength: 1
+            reportingEnd:
+              type: string
+              format: date-time
+            reportingStart:
+              type: string
+              format: date-time
+            runImmediately:
+              type: boolean
+            schedule:
+              type: object
+              required:
+                - period
+              oneOf:
+                - allOf:
+                    - not:
+                        required:
+                          - daily
+                    - not:
+                        required:
+                          - weekly
+                    - not:
+                        required:
+                          - monthly
+                    - not:
+                        required:
+                          - cron
+                  properties:
+                    period:
+                      enum:
+                        - hourly
+                - allOf:
+                    - not:
+                        required:
+                          - hourly
+                    - not:
+                        required:
+                          - weekly
+                    - not:
+                        required:
+                          - monthly
+                    - not:
+                        required:
+                          - cron
+                  properties:
+                    period:
+                      enum:
+                        - daily
+                - allOf:
+                    - not:
+                        required:
+                          - hourly
+                    - not:
+                        required:
+                          - daily
+                    - not:
+                        required:
+                          - monthly
+                    - not:
+                        required:
+                          - cron
+                  properties:
+                    period:
+                      enum:
+                        - weekly
+                - allOf:
+                    - not:
+                        required:
+                          - hourly
+                    - not:
+                        required:
+                          - daily
+                    - not:
+                        required:
+                          - weekly
+                    - not:
+                        required:
+                          - cron
+                  properties:
+                    period:
+                      enum:
+                        - monthly
+                - allOf:
+                    - not:
+                        required:
+                          - hourly
+                    - not:
+                        required:
+                          - daily
+                    - not:
+                        required:
+                          - weekly
+                    - not:
+                        required:
+                          - monthly
+                  properties:
+                    period:
+                      enum:
+                        - cron
+              properties:
+                cron:
+                  type: object
+                  required:
+                    - expression
+                  properties:
+                    expression:
+                      type: string
+                      pattern: '^(\d+|\*)(/\d+)?(\s+(\d+|\*)(/\d+)?){4}$'
+                daily:
+                  type: object
+                  properties:
+                    hour:
+                      type: integer
+                      maximum: 23
+                      minimum: 0
+                    minute:
+                      type: integer
+                      maximum: 59
+                      minimum: 0
+                    second:
+                      type: integer
+                      maximum: 60
+                      minimum: 0
+                hourly:
+                  type: object
+                  properties:
+                    hour:
+                      type: integer
+                      maximum: 23
+                      minimum: 0
+                    minute:
+                      type: integer
+                      maximum: 59
+                      minimum: 0
+                monthly:
+                  type: object
+                  properties:
+                    dayOfMonth:
+                      type: integer
+                      maximum: 31
+                      minimum: 1
+                    hour:
+                      type: integer
+                      maximum: 23
+                      minimum: 0
+                    minute:
+                      type: integer
+                      maximum: 59
+                      minimum: 0
+                    second:
+                      type: integer
+                      maximum: 60
+                      minimum: 0
+                period:
+                  type: string
+                  minLength: 1
+                  enum:
+                    - hourly
+                    - daily
+                    - weekly
+                    - monthly
+                    - cron
+                weekly:
+                  type: object
+                  properties:
+                    dayofWeek:
+                      type: string
+                      enum:
+                        - sun
+                        - sunday
+                        - mon
+                        - monday
+                        - tue
+                        - tues
+                        - tuesday
+                        - wed
+                        - weds
+                        - wednesday
+                        - thur
+                        - thurs
+                        - thursday
+                        - fri
+                        - friday
+                        - sat
+                        - saturday
+                    hour:
+                      type: integer
+                      maximum: 23
+                      minimum: 0
+                    minute:
+                      type: integer
+                      maximum: 59
+                      minimum: 0
+                    second:
+                      type: integer
+                      maximum: 60
+                      minimum: 0
+  versions:
+    - name: v1
+      served: true
+      storage: true
+    - name: v1alpha1
+      served: true
+      storage: false
+  additionalPrinterColumns:
+    - name: Query
+      type: string
+      JSONPath: .spec.query
+    - name: Schedule
+      type: string
+      JSONPath: .spec.schedule.period
+    - name: Running
+      type: string
+      JSONPath: '.status.conditions[?(@.type=="Running")].reason'
+    - name: Failed
+      type: string
+      JSONPath: '.status.conditions[?(@.type=="Failure")].reason'
+    - name: Last Report Time
+      type: string
+      JSONPath: .status.lastReportTime
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
+  conversion:
+    strategy: None
+status:
+  conditions:
+    - type: NamesAccepted
+      status: 'True'
+      lastTransitionTime: '2020-04-06T17:36:37Z'
+      reason: NoConflicts
+      message: no conflicts found
+    - type: Established
+      status: 'True'
+      lastTransitionTime: null
+      reason: InitialNamesAccepted
+      message: the initial names have been accepted
+  acceptedNames:
+    plural: reports
+    singular: report
+    kind: Report
+    listKind: ReportList
+  storedVersions:
+    - v1
