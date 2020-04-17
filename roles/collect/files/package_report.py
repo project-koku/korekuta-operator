@@ -225,7 +225,7 @@ def write_tarball(tarfilename, archivefiles=[]):
         with tarfile.open(tarfilename, f"{FILE_FLAG}:gz") as tarball:
             for fname in archivefiles:
                 LOG.debug(f"Adding {fname} to {tarfilename}: ")
-                tarball.add(fname)
+                tarball.add(fname, arcname=os.path.sep)
     except FileExistsError as exc:
         LOG.critical(exc)
         sys.exit(2)
