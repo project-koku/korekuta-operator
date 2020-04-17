@@ -320,7 +320,7 @@
     - '{{ csv_stat_result.results }}'
 
 - name: Run packaging script to prepare reports for sending to Insights
-  script: package_report.py --filepath {{ ocp_cluster_id }} --max-size {{ collect_max_csvfile_size }} --ocp-cluster-id {{ ocp_cluster_id }} --overwrite
+  script: package_report.py --filepath {{ ocp_cluster_id }} --max-size {{ collect_max_csvfile_size }} --ocp-cluster-id {{ ocp_cluster_id }} --overwrite --manifest-id {{ collect_file_prefix }}
   args:
     chdir: '{{ collect_download_path }}'
   register: packaged_reports

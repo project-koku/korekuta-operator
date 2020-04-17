@@ -26,7 +26,6 @@ import os
 import sys
 import tarfile
 from datetime import datetime
-from uuid import uuid4
 
 
 DEFAULT_MAX_SIZE = 100
@@ -35,7 +34,7 @@ MEGABYTE = 1024 * 1024
 TEMPLATE = {
     "files": None,
     "date": datetime.utcnow().isoformat(),
-    "uuid": str(uuid4()),
+    "uuid": None,
     "cluster_id": None
 }
 
@@ -83,6 +82,7 @@ def parse_args():
                         help="OCP Cluster ID")
     parser.add_argument("-v", "--verbosity", action="count",
                         default=0, help="increase verbosity (up to -vvv)")
+    parser.add_argument("--manifest-id", required=True, help="Manifest UUID")
     return parser.parse_args()
 
 
@@ -191,6 +191,7 @@ def render_manifest(args):
     manifest = TEMPLATE
     manifest["cluster_id"] = args.ocp_cluster_id
     manifest["files"] = os.listdir(args.filepath)
+    manifest["uuid"] = args.manifest_id
     LOG.debug(f"rendered manifest: {manifest}")
     manifest_filename = f"{args.filepath}/manifest.json"
 
@@ -225,7 +226,7 @@ def write_tarball(tarfilename, archivefiles=[]):
         with tarfile.open(tarfilename, f"{FILE_FLAG}:gz") as tarball:
             for fname in archivefiles:
                 LOG.debug(f"Adding {fname} to {tarfilename}: ")
-                tarball.add(fname)
+                tarball.add(fname, arcname=os.path.sep)
     except FileExistsError as exc:
         LOG.critical(exc)
         sys.exit(2)
