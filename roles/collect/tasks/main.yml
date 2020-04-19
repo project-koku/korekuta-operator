@@ -320,7 +320,7 @@
     - '{{ csv_stat_result.results }}'
 
 - name: Run packaging script to prepare reports for sending to Insights
-  script: package_report.py --filepath {{ ocp_cluster_id }} --max-size {{ collect_max_csvfile_size }} --ocp-cluster-id {{ ocp_cluster_id }} --overwrite --manifest-id {{ collect_file_prefix }}
+  script: package_report.py --filepath {{ ocp_cluster_id }} --max-size {{ collect_max_csvfile_size }} --ocp-cluster-id {{ ocp_cluster_id }} --overwrite
   args:
     chdir: '{{ collect_download_path }}'
   register: packaged_reports
@@ -336,12 +336,24 @@
 
 - name: Upload the cost report to ingress using basic auth
   shell:
-    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -u {{ username }}:{{ password }} --cacert {{ cacert_path }}'
+    cmd: 'curl -vvvv -F "file=@{{ item }};type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -u {{ username }}:{{ password }} --cacert {{ cacert_path }}'
     chdir: '{{ collect_download_path }}'
+  with_items:
+    - '{{ packaged_reports.stdout_lines }}'
   when: authentication == 'basic'
 
 - name: Upload the cost report to ingress using token auth
   shell:
-    cmd: 'curl -vvvv -F "file=@cost-mgmt.tar.gz;type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" -H "User-Agent: cost-mgmt-operator/{{ source_commit }} cluster/{{ ocp_cluster_id }}" --cacert {{ cacert_path }}'
+    cmd: 'curl -vvvv -F "file=@{{ item }};type=application/vnd.redhat.hccm.tar+tgz" {{ ingress_url }} -H "Authorization: Bearer {{ authentication_token }}" -H "User-Agent: cost-mgmt-operator/{{ source_commit }} cluster/{{ ocp_cluster_id }}" --cacert {{ cacert_path }}'
     chdir: '{{ collect_download_path }}'
+  with_items:
+    - '{{ packaged_reports.stdout_lines }}'
   when: authentication == 'token'
+
+- name: Remove upload files
+  file:
+    path: '{{ collect_download_path }}/{{ item }}'
+    state: absent
+  with_items:
+    - '{{ packaged_reports.stdout_lines }}'
+  when: collect_delete_after | bool
