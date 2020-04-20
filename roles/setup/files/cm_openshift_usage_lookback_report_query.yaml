@@ -91,4 +91,4 @@ spec:
       resource_id,
       pod_labels
     FROM {| .Report.Inputs.CostManagementOpenShiftUsageReportName | reportTableName |}
-    WHERE {| .Report.Inputs.CostManagementOpenShiftUsageReportName | reportTableName |}.interval_start >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}' - interval '10' day
+    WHERE {| .Report.Inputs.CostManagementOpenShiftUsageReportName | reportTableName |}.interval_start >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}' - interval '3' day

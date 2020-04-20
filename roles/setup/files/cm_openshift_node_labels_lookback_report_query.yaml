@@ -40,4 +40,4 @@ spec:
       interval_end,
       node_labels
     FROM {| .Report.Inputs.CostManagementOpenShiftNodeLabelsReportName | reportTableName |}
-    WHERE {| .Report.Inputs.CostManagementOpenShiftNodeLabelsReportName | reportTableName |}.interval_start >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}' - interval '10' day
+    WHERE {| .Report.Inputs.CostManagementOpenShiftNodeLabelsReportName | reportTableName |}.interval_start >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}' - interval '3' day
