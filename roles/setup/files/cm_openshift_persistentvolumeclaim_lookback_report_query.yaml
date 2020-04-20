@@ -75,4 +75,4 @@ spec:
       persistentvolume_labels,
       persistentvolumeclaim_labels
     FROM {| .Report.Inputs.PersistentVolumeClaimUsageReportName | reportTableName |}
-    WHERE {| .Report.Inputs.PersistentVolumeClaimUsageReportName | reportTableName |}.interval_start >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}' - interval '10' day
+    WHERE {| .Report.Inputs.PersistentVolumeClaimUsageReportName | reportTableName |}.interval_start >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}' - interval '3' day
