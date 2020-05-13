@@ -214,13 +214,16 @@ def render_manifest(args, archivefiles=[]):
     return (manifest_filename, manifest_uuid)
 
 
-def write_tarball(args, tarfilename, archivefiles=[]):
+def write_tarball(args, tarfilename, manifest_filename, manifest_uuid, archivefiles, file_count=0):
     """Write a tarball, adding the given files to the archive.
 
     Args:
         args (Namespace) an ArgumentParser Namespace object
         tarfilename (str) the name of the tarball to create
+        manifest_filename (str) the name of the report manifest
+        manifest_uuid (str) the unique identifier of the manifest
         archivefiles (list) the list of files to include in the archive
+        file_count (int) file number initializer
 
     Returns:
         (str) full filepath of the created tarball
@@ -231,10 +234,8 @@ def write_tarball(args, tarfilename, archivefiles=[]):
     if not archivefiles:
         return None
     
-    manifest_filename, manifest_uuid = render_manifest(args, archivefiles)
     try:
         with tarfile.open(tarfilename, f"{FILE_FLAG}:gz") as tarball:
-            file_count = 0
             for fname in archivefiles:
                 LOG.debug(f"Adding {fname} to {tarfilename}: ")
                 if fname.endswith(".csv"):
@@ -246,8 +247,16 @@ def write_tarball(args, tarfilename, archivefiles=[]):
         LOG.critical(exc)
         sys.exit(2)
     LOG.info(f"Wrote: {tarfilename}")
-    return f"{tarfilename}"
+    return f"{tarfilename}", file_count
 
+
+def build_local_csv_file_list(staging_directory):
+    """Build a list of all report csv files in staging directory."""
+    file_list = []
+    for csv_file in os.listdir(staging_directory):
+        if ".csv" in csv_file:
+            file_list.append(f"{staging_directory}/{csv_file}")
+    return file_list
 
 if "__main__" in __name__:
     args = parse_args()
@@ -264,20 +273,28 @@ if "__main__" in __name__:
         split_files(args.filepath, args.max_size)
         tarpath = args.filepath + "/../"
         tarfiletmpl = "cost-mgmt{}.tar.gz"
-        for idx, filename in enumerate(os.listdir(args.filepath)):
+
+        file_list = build_local_csv_file_list(args.filepath)
+        manifest_filename, manifest_uuid = render_manifest(args, file_list)
+        file_count = 0
+        for idx, filename in enumerate(file_list):
             if ".csv" in filename:
                 tarfilename = os.path.abspath(
                     tarpath + tarfiletmpl.format(idx))
-                output_tar = write_tarball(args, 
-                    tarfilename, [f"{args.filepath}/{filename}"])
+                output_tar, file_count = write_tarball(args, 
+                    tarfilename, manifest_filename, manifest_uuid, [filename], file_count)
                 if output_tar:
                     out_files.append(output_tar)
+
     else:
         tarfilename = os.path.abspath(args.filepath + "/../cost-mgmt.tar.gz")
-        files = [f"{args.filepath}/{filename}" for filename in os.listdir(args.filepath)]
-        output_tar = write_tarball(args, tarfilename, files)
-        if output_tar:
-            out_files.append(output_tar)
+
+        file_list = build_local_csv_file_list(args.filepath)
+        if file_list:
+            manifest_filename, manifest_uuid = render_manifest(args, file_list)
+            output_tar, _ = write_tarball(args, tarfilename, manifest_filename, manifest_uuid, file_list)
+            if output_tar:
+                out_files.append(output_tar)
 
     for fname in out_files:
         print(fname)
