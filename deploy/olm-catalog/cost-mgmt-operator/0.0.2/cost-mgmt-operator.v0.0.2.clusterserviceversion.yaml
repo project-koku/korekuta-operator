@@ -443,4 +443,3 @@ spec:
     url: https://github.com/project-koku/korekuta-operator
   keywords: ['cost', 'management', 'usage', 'monitor']
   replaces: cost-mgmt-operator.v0.0.1
-  
