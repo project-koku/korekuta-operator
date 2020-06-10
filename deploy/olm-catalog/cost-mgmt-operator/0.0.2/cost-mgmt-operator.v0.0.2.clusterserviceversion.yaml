@@ -30,7 +30,7 @@ metadata:
           }
         }
       ]
-    capabilities: Basic Install
+    capabilities: Seamless Upgrade
     categories: "Monitoring"
     certified: 'false'
     containerImage: quay.io/repository/project-koku/cost-mgmt-operator:v0.0.2
