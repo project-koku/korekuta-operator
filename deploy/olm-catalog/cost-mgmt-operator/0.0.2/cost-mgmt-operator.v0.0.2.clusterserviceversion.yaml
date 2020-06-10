@@ -30,7 +30,7 @@ metadata:
           }
         }
       ]
-    capabilities: Seamless Upgrade
+    capabilities: Seamless Upgrades
     categories: "Monitoring"
     certified: 'false'
     containerImage: quay.io/repository/project-koku/cost-mgmt-operator:v0.0.2
