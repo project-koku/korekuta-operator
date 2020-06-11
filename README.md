@@ -6,6 +6,8 @@ Operator to obtain OCP usage data and upload it to koku. The operator utilizes [
 
 You must have access to an OpenShift v.4.3.0+ cluster..
 
+To submit an issue please visit https://issues.redhat.com/projects/COST/
+
 ## Development
 
 This project was generated using Operator SDK. For a more in depth understanding of the structure of this repo, see the [user guide](https://sdk.operatorframework.io/docs/ansible/quickstart/) that was used to generate it.
