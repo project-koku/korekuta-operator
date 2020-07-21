@@ -271,13 +271,13 @@
             kind: Namespace
             state: present
 
-        - name: Create the metering.openshift.io/v1alpha1.Metering crd
+        - name: Create the metering.openshift.io/v1.Metering crd
           k8s:
             state: present
             namespace: '{{ namespace }}'
             definition: '{{ metering_crd }}'
 
-        - name: Create the metering.openshift.io/v1alpha1.Metering cr
+        - name: Create the metering.openshift.io/v1.Metering cr
           k8s:
             state: present
             namespace: '{{ namespace }}'
