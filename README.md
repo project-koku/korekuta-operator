@@ -162,7 +162,6 @@ cost-mgmt-operator
 In order to see the logs from the operator deployment you can run:
 
 ```
-oc logs -f deployment/cost-mgmt-operator --container ansible
 oc logs -f deployment/cost-mgmt-operator --container operator
 ```
 
