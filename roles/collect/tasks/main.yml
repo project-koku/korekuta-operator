@@ -1,7 +1,7 @@
 ---
 
 - name: Obtain cost-mgmt-setup info
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: cost-mgmt.openshift.io/v1alpha1
     kind: CostManagement
     namespace: "{{ namespace }}"
@@ -74,7 +74,7 @@
     current_year_month: '{{ (current_year | string )  + (current_month | string) }}'
 
 - name: Obtain metering api info
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: v1
     kind: Route
     namespace: "{{ namespace }}"
@@ -86,7 +86,7 @@
   when: metering_route.resources
 
 - name: Get the service account token
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: v1
     kind: Secret
     namespace: "{{ namespace }}"
@@ -131,7 +131,7 @@
   when: not authentication_secret_name
 
 - name: Get the authentication secret
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: v1
     kind: Secret
     namespace: "{{ namespace }}"
@@ -204,13 +204,13 @@
   when: debug
 
 - name: Create trusted-ca-bundle if it doesn't exist
-  k8s:
+  community.kubernetes.k8s:
     namespace: "{{ namespace }}"
     state: present
     src: '{{ ansible_env.HOME }}/roles/collect/files/trusted_ca_certmap.yaml'
 
 - name: Get the trusted-ca-bundle
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: v1
     kind: ConfigMap
     namespace: "{{ namespace }}"

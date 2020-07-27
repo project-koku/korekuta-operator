@@ -1,6 +1,6 @@
 ---
 - name: Search for metering resources
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: v1
     kind: MeteringConfig
     namespace: "{{ namespace }}"
@@ -12,7 +12,7 @@
   when: not metering_objects.resources
 
 - name: Obtain cost-mgmt-setup info
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: cost-mgmt.openshift.io/v1alpha1
     kind: CostManagement
     namespace: "{{ namespace }}"
@@ -38,7 +38,7 @@
   ignore_errors: true
 
 - name: Create datasources and reportqueries
-  k8s:
+  community.kubernetes.k8s:
     namespace: "{{ namespace }}"
     state: present
     src: "{{ item }}"
