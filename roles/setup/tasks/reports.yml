@@ -135,7 +135,7 @@
     - templates/*.j2
 
 - name: Templated reports state
-  k8s:
+  community.kubernetes.k8s:
     namespace: '{{ namespace }}'
     state: '{{ state }}'
     src: '{{ item }}'

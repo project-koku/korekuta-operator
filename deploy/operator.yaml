@@ -15,20 +15,6 @@ spec:
     spec:
       serviceAccountName: cost-mgmt-operator
       containers:
-        - name: ansible
-          command:
-            - /usr/local/bin/ao-logs
-            - /tmp/ansible-operator/runner
-            - stdout
-            # Replace this with the built image name
-          image: "{{ REPLACE_IMAGE }}"
-          imagePullPolicy: "{{ pull_policy|default('Always') }}"
-          volumeMounts:
-            - mountPath: /tmp/ansible-operator/runner
-              name: runner
-              readOnly: true
-            - mountPath: /tmp/cost-mgmt-operator-collect
-              name: cost-mgmt-operator
         - name: operator
           # Replace this with the built image name
           image: "{{ REPLACE_IMAGE }}"
@@ -51,6 +37,11 @@ spec:
               value: "cost-mgmt-operator"
             - name: ANSIBLE_GATHERING
               value: explicit
+      ports:
+        - name: http-metrics
+          containerPort: 8383
+        - name: cr-metrics
+          containerPort: 8686
       volumes:
         - name: runner
           emptyDir: {}
