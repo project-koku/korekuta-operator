@@ -272,7 +272,7 @@
 
 - name: Query Prometheus directly
   shell:
-    cmd: 'curl -vvvv {{ prom_url }} -H "Authorization: Bearer {{ service_account_token }}" --cacert {{ cacert_path }}'
+    cmd: 'curl -vvvv -k {{ prom_url }} -H "Authorization: Bearer {{ service_account_token }}" --cacert {{ cacert_path }}'
   register: prom_output
 
 - name: debug prom output
