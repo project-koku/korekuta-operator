@@ -280,6 +280,10 @@
     var: prom_output
   when: debug
 
+- name: Run Prometheus query script
+  script: query_prom.py --cacert {{ cacert_path }} --bearer {{ service_account_token }}
+  register: query_prom
+
 - name: Create temp dir for downloaded files
   file:
     path: '{{ collect_cluster_download_path }}'

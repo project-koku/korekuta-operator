@@ -58,13 +58,19 @@ deploy-operator-dev-branch:
 	sed -i "" "s?{{ pull_policy|default('Always') }}?Always?g" testing/operator.yaml
 	oc apply -f testing/operator.yaml
 
-deploy-dependencies:
+setup-cluster-role:
+	@cp deploy cluster_role.yaml testing/cluster_role.yaml
+	@sed -i "" 's/placeholder/$(shell echo $(or $(namespace),openshift-metering))/g' testing/cluster_role.yaml
+
+deploy-dependencies: setup-cluster-role
 	oc apply -f deploy/crds/cost_mgmt_crd.yaml || true
 	oc apply -f deploy/crds/cost_mgmt_data_crd.yaml || true
 	oc apply -f testing/authentication_secret.yaml
 	oc apply -f deploy/service_account.yaml
 	oc apply -f deploy/role.yaml
 	oc apply -f deploy/role_binding.yaml
+	oc apply -f testing/cluster_role.yaml
+	oc apply -f deploy/cluster_role_binding.yaml
 
 deploy-custom-resources:
 	oc apply -f testing/cost_mgmt_cr.yaml
