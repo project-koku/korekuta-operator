@@ -51,10 +51,10 @@ def parse_args():
     parser.add_argument("-b", "--bearer", required=True,
                         help="Bearer token value")
     
-    parser.add_argument("-p", "--prometheus-url", required=True,
+    parser.add_argument("-p", "--prometheus-url",
                         default=DEFAULT_PROMETHEUS, help="Prometheus host and query api")
     
-    parser.add_argument("-q", "--query", required=True,
+    parser.add_argument("-q", "--query",
                         default=DEFAULT_QUERY, help="Prometheus query")
 
     parser.add_argument("-v", "--verbosity", action="count",
