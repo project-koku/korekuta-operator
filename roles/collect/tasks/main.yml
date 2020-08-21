@@ -284,6 +284,11 @@
   script: query_prom.py --cacert {{ cacert_path }} --bearer {{ service_account_token }}
   register: query_prom
 
+- name: debug query prom
+  debug:
+    var: query_prom
+  when: debug
+
 - name: Create temp dir for downloaded files
   file:
     path: '{{ collect_cluster_download_path }}'
