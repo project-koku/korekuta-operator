@@ -29,7 +29,7 @@ import time
 
 
 # default prometheus query
-DEFAULT_PROMETHEUS = 'https://thanos-querier.openshift-monitoring.svc:9091/api/v1/query_range'
+DEFAULT_PROMETHEUS = "https://thanos-querier.openshift-monitoring.svc:9091/api/v1/query_range"
 DEFAULT_QUERY = "up"
 
 # logging
@@ -65,17 +65,19 @@ def parse_args():
 def execute_prom_query(prometheus_url, query, cacert, bearer_token):
     """Query prometheus for metrics."""
     results = None
-    end = datetime.datetime.now().replace(minute=0, second=0, microsecond=0)
-    start = end - datetime.timedelta(hours=1)
-    step = '1h'
+    end_dt = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    start_dt = end - datetime.timedelta(hours=1)
+    end = end_dt.isoformat("T") + "Z"
+    start = start_dt.isoformat("T") + "Z"
+    step = "1h"
     req_params={ 
-        'query': query,
-        'start': start,
-        'end': end,
-        'step': step}
+        "query": query,
+        "start": start,
+        "end": end,
+        "step": step}
     headers = {"Authorization": f"Bearer {bearer_token}"}
-    response = requests.get(prometheus_url, params=req_params, cert=cacert, verify=False, headers=headers)
-    results = response.json()['data']['result']
+    response = requests.get(prometheus_url, params=req_params, verify=False, headers=headers)
+    results = response.json()["data"]["result"]
 
     return results
 
