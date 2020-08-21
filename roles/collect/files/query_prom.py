@@ -62,7 +62,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def execute_prom_query(prometheus_url, query):
+def execute_prom_query(prometheus_url, query, cacert, bearer_token):
     """Query prometheus for metrics."""
     results = None
     end = datetime.datetime.now().replace(minute=0, second=0, microsecond=0)
@@ -73,7 +73,8 @@ def execute_prom_query(prometheus_url, query):
         'start': start,
         'end': end,
         'step': step}
-    response = requests.get(prometheus_url, params=req_params)
+    headers = {"Authorization": f"Bearer {bearer_token}"}
+    response = requests.get(prometheus_url, params=req_params, cert=cacert, verify=False, headers=headers)
     results = response.json()['data']['result']
 
     return results
@@ -85,5 +86,5 @@ if "__main__" in __name__:
         LOG.setLevel(LOG_VERBOSITY[args.verbosity])
     LOG.debug("CLI Args: %s", args)
 
-    json_results = execute_prom_query(args.prometheus_url, args.query)
+    json_results = execute_prom_query(args.prometheus_url, args.query, args.cacert, args.bearer)
     print(json_results)
