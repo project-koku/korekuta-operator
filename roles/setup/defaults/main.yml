@@ -1,5 +1,8 @@
 ---
 namespace: openshift-metering
+current_second: '{{ ansible_date_time.second | int }}'
+current_minute: '{{ ansible_date_time.minute | int }}'
+current_hour: '{{ ansible_date_time.hour | int }}'
 current_day: '{{ ansible_date_time.day | int }}'
 current_month: '{{ ansible_date_time.month | int }}'
 current_year: '{{ ansible_date_time.year | int }}'

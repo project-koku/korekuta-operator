@@ -37,6 +37,36 @@
   when: cost_mgmt_setup.resources
   ignore_errors: true
 
+- name: debug current_second
+  debug:
+    var: current_second
+  when: debug
+
+- name: debug current_minute
+  debug:
+    var: current_minute
+  when: debug
+
+- name: debug current_hour
+  debug:
+    var: current_hour
+  when: debug
+
+- name: debug current_day
+  debug:
+    var: current_day
+  when: debug
+
+- name: debug current_month
+  debug:
+    var: current_month
+  when: debug
+
+- name: debug current_year
+  debug:
+    var: current_year
+  when: debug
+
 - name: Create datasources and reportqueries
   community.kubernetes.k8s:
     namespace: "{{ namespace }}"
