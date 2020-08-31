@@ -23,21 +23,25 @@
       copy:
         dest: "/tmp/get"
         src: 'test_data.csv'
+        mode: 0666
 
     - name: copy mock_reporting_api server to k8s container
       copy:
         dest: "/tmp/mock_reporting_api.py"
         src: 'mock_reporting_api.py'
+        mode: 0666
 
     - name: copy mock_reporting_api pem file to k8s container
       copy:
         dest: "/tmp/mock_reporting_api.pem"
         src: 'mock_reporting_api.pem'
+        mode: 0666
 
     - name: copy mock_ingress_server file to k8s container
       copy:
         dest: "/tmp/mock_ingress_server.py"
         src: 'mock_ingress_server.py'
+        mode: 0666
 
 - name: Converge on setup
   hosts: localhost
