@@ -44,8 +44,7 @@
     name: cost-mgmt-setup
     namespace: openshift-metering
     status:
-        hello: world
-        custom: entries
+        current_reporting_month: "{{ current_month }}"
 
 - name: Create datasources and reportqueries
   community.kubernetes.k8s:
