@@ -3,6 +3,7 @@ extends: default
 
 # For all rules
 ignore: |
+  .github/
   .tox/
 
 rules:
