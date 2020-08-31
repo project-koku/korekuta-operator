@@ -1,6 +1,6 @@
 # korekuta-operator
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-orange.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License: AGPL v3](https://img.shields.io/github/license/project-koku/koku.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ![Unit Tests](https://github.com/project-koku/korekuta-operator/workflows/Unit%20Tests/badge.svg)
 
 
