@@ -37,14 +37,29 @@
   when: cost_mgmt_setup.resources
   ignore_errors: true
 
+- name: Get cost_mgmt_data_cr
+  community.kubernetes.k8s_info:
+    api_version: cost-mgmt-data.openshift.io/v1alpha1
+    kind: CostManagementData
+    namespace: "{{ namespace }}"
+    name: cost-mgmt-data-example
+  register: cost_mgmt_data
+  ignore_errors: true
+
+- name: Set cost_mgmt_data_cr_exists
+  set_fact:
+    cost_mgmt_data_cr_exists: cost_mgmt_data_cr is succeeded
+  ignore_errors: true
+
 - name: The current month reports are created for
   operator_sdk.util.k8s_status:
     api_version: cost-mgmt.openshift.io/v1alpha1
     kind: CostManagement
     name: cost-mgmt-setup
-    namespace: openshift-metering
+    namespace: "{{ namespace }}"
     status:
         current_reporting_month: "{{ current_month }}"
+        cost_mgmt_data_cr_exists: "{{ cost_mgmt_data_cr_exists }}"
 
 - name: Create datasources and reportqueries
   community.kubernetes.k8s:
