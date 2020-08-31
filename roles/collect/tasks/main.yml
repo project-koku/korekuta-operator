@@ -357,3 +357,13 @@
   with_items:
     - '{{ packaged_reports.stdout_lines }}'
   when: collect_delete_after | bool
+
+- name: The current month reports are created for
+  operator_sdk.util.k8s_status:
+    api_version: cost-mgmt.openshift.io/v1alpha1
+    kind: CostManagement
+    name: cost-mgmt-setup
+    namespace: openshift-metering
+    status:
+        hello: world
+        custom: entries
