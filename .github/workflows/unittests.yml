@@ -1,0 +1,51 @@
+name: Unit Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.6, 3.8]
+
+    steps:
+      - name: Checkout repsository
+        uses: actions/checkout@v2
+
+      - name: Display build environment
+        run: printenv
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pipenv
+        run: sudo python3 -m pip install pipenv==2018.11.26
+
+      - name: Cache dependencies
+        id: cache-dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pipenv
+            ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-env-${{ matrix.python-version }}-${{ hashFiles('**/Pipfile.lock') }}-${{ github.ref }}
+
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: |
+          pip3 install openshift jmespath
+          pipenv install --dev --ignore-pipfile --python ${{ matrix.python-version }}
+          pipenv run ansible-galaxy collection install community.kubernetes
+
+      - name: Run unit tests
+        run: pipenv run molecule test -s test-local
+
