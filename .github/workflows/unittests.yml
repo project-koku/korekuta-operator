@@ -28,9 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install non-pipenv dependencies
-        run: |
-          sudo python3 -m pip install pipenv==2018.11.26 setuptools
-          pip3 install openshift jmespath
+        run: sudo python3 -m pip install pipenv==2018.11.26
 
       - name: Cache dependencies
         id: cache-dependencies
