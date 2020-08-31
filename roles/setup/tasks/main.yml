@@ -48,13 +48,12 @@
 
 - name: Set cost_mgmt_data_cr_exists
   set_fact:
-    cost_mgmt_data_cr_exists: true
-  when: cost_mgmt_data_cr.resources
+    cost_mgmt_data_cr_exists: "{{ cost_mgmt_data_cr.resources | bool }}"
 
-- name: Set cost_mgmt_data_cr_exists
-  set_fact:
-    cost_mgmt_data_cr_exists: false
-  when: not cost_mgmt_data_cr.resources
+# - name: Set cost_mgmt_data_cr_exists
+#   set_fact:
+#     cost_mgmt_data_cr_exists: false
+#   when: not cost_mgmt_data_cr.resources
 
 - name: The current month reports are created for
   operator_sdk.util.k8s_status:
