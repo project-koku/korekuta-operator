@@ -37,6 +37,16 @@
   when: cost_mgmt_setup.resources
   ignore_errors: true
 
+- name: The current month reports are created for
+  operator_sdk.util.k8s_status:
+    api_version: cost-mgmt.openshift.io/v1alpha1
+    kind: CostManagement
+    name: cost-mgmt-setup
+    namespace: openshift-metering
+    status:
+        hello: world
+        custom: entries
+
 - name: Create datasources and reportqueries
   community.kubernetes.k8s:
     namespace: "{{ namespace }}"
