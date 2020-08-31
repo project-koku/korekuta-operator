@@ -35,6 +35,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
+            ~/.cache/pip
             ~/.cache/pipenv
             ~/.local/share/virtualenvs
           key: ${{ runner.os }}-env-${{ matrix.python-version }}-${{ hashFiles('**/Pipfile.lock') }}-${{ github.ref }}
