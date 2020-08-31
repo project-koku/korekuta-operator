@@ -11,8 +11,13 @@ pylint = ">=2.4"
 pyyaml = ">=5.3"
 testinfra = ">=4.0.0"
 pytest= ">2.9.1"
+jmespath = ">=0.10.0"
+openshift = ">=0.11.2"
 
 [packages]
 ansible = ">=2.7"
 ansible-runner = ">=1.4.4"
 ansible-runner-http = ">=1.0.0"
+
+[requires]
+python_version = "3.6"
