@@ -48,7 +48,7 @@
 
 - name: Set cost_mgmt_data_cr_exists
   set_fact:
-    cost_mgmt_data_cr_exists: cost_mgmt_data_cr is succeeded
+    cost_mgmt_data_cr_exists: "{{ cost_mgmt_data_cr is failed | bool }}"
   ignore_errors: true
 
 - name: The current month reports are created for
