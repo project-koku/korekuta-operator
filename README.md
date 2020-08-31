@@ -53,7 +53,7 @@ make test-local
 ```
 ## Setup for running the Operator
 
-First, switch to the OpenShift project called `openshift-metering`. This is where we are going to deploy our Operator and its dependencies:
+First, [install the metering-operator](docs/installing-metering.md). Next, switch to the `openshift-metering` namespace. This is where we are going to deploy our Operator:
 
 ```
 oc project openshift-metering
@@ -291,4 +291,4 @@ Whenever you release a new version of the `cost-mgmt-operator`, you must test th
     ```
 9. Rerun `$ operator-courier push "$OPERATOR_DIR" "$QUAY_NAMESPACE" "$PACKAGE_NAME" "$PACKAGE_VERSION" "$TOKEN"` and check that a new release of your application is available in your quay.io registry.
 10. Now refresh your operator source, wait a few minutes and watch the new version of the operator automatically install.
-    
+
