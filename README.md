@@ -40,7 +40,7 @@ To activate the virtual environment run
 pipenv shell
 ```
 
-Next, install the Operator SDK CLI using the following [documentation](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md).
+Next, install the Operator SDK CLI using the following [documentation](https://sdk.operatorframework.io/docs/installation/install-operator-sdk/).
 
 Finally, install [jq](https://stedolan.github.io/jq/download/).
 
