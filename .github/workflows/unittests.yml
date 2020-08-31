@@ -30,7 +30,7 @@ jobs:
       - name: Install non-pipenv dependencies
         run: |
           sudo python3 -m pip install pipenv==2018.11.26 setuptools
-          sudo python3 -m pip install openshift jmespath
+          pip3 install openshift jmespath
 
       - name: Cache dependencies
         id: cache-dependencies
