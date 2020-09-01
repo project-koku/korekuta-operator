@@ -1,30 +1,9 @@
 ---
 
-- name: print _cost_mgmt_data_openshift_io_costmanagementdata
-  debug:
-    var: _cost_mgmt_data_openshift_io_costmanagementdata
-
-- name: print meta
-  debug:
-    var: meta
-
-- name: Obtain cost-mgmt-setup info
-  community.kubernetes.k8s_info:
-    api_version: cost-mgmt.openshift.io/v1alpha1
-    kind: CostManagement
-    namespace: "{{ namespace }}"
-    name: cost-mgmt-setup
-  register: cost_mgmt_setup
-
-- name: Fail if cost-mgmt-setup does not exist
-  fail:
-    msg: 'The cost-mgmt-setup custom resource has not been configured.'
-  when: not cost_mgmt_setup.resources
-
 - name: Set cluster ID
   set_fact:
-    ocp_cluster_id: "{{ cost_mgmt_setup.resources[0].spec.clusterID }}"
-  when: cost_mgmt_setup.resources
+    ocp_cluster_id: "{{ current_cr_spec.clusterID }}"
+  when: current_cr_spec.clusterID
 
 - name: Check for OCP clusterID
   debug: msg='OCP clusterID is not defined'
@@ -32,17 +11,17 @@
 
 - name: Set validation boolean
   set_fact:
-    ocp_validate_cert: "{{ cost_mgmt_setup.resources[0].spec.validate_cert }}"
-  when: cost_mgmt_setup.resources
+    ocp_validate_cert: "{{ current_cr_spec.validate_cert }}"
+  when: current_cr_spec.validate_cert
 
 - name: Check for validation boolean
   debug: msg='HTTPS certificate validation variable is not defined; defaulting to true'
-  when: not cost_mgmt_setup.resources
+  when: not current_cr_spec.validate_cert
 
 - name: Set service account token name
   set_fact:
-    reporting_operator_token_name: "{{ cost_mgmt_setup.resources[0].spec.reporting_operator_token_name }}"
-  when: cost_mgmt_setup.resources
+    reporting_operator_token_name: "{{ current_cr_spec.reporting_operator_token_name }}"
+  when: current_cr_spec.reporting_operator_token_name
 
 - name: Check for service account token name
   debug: msg='Reporting Operator service account token name is not defined'
@@ -50,19 +29,13 @@
 
 - name: Fail if the clusterID or service token are not defined
   fail:
-    msg: 'The cost-mgmt-setup custom resource requires the clusterID and reporting_operator_token_name to be defined.'
+    msg: 'The CostManagement custom resource requires the clusterID and reporting_operator_token_name to be defined.'
   when: not ocp_cluster_id or not reporting_operator_token_name
 
 - name: Set upload_wait
   set_fact:
-    collect_upload_wait: "{{ cost_mgmt_setup.resources[0].spec.upload_wait | int }}"
-  when: cost_mgmt_setup.resources
-  ignore_errors: true
-
-- name: Set current_month
-  set_fact:
-    current_month: "{{ cost_mgmt_setup.resources[0].spec.current_month | string }}"
-  when: cost_mgmt_setup.resources
+    collect_upload_wait: "{{ current_cr_spec.upload_wait | int }}"
+  when: current_cr_spec.upload_wait
   ignore_errors: true
 
 - name: Format current_month string if less than 10
@@ -70,12 +43,6 @@
     current_month: '{{ "0" + (current_month | string) }}'
   when:
     - (current_month | int)  < 10
-
-- name: Set current_year
-  set_fact:
-    current_year: "{{ cost_mgmt_setup.resources[0].spec.current_year | string }}"
-  when: cost_mgmt_setup.resources
-  ignore_errors: true
 
 - name: Set monthly suffix for reports
   set_fact:
@@ -103,8 +70,8 @@
 
 - name: Set authentication_secret name
   set_fact:
-    authentication_secret_name: "{{ cost_mgmt_setup.resources[0].spec.authentication_secret_name }}"
-  when: cost_mgmt_setup.resources
+    authentication_secret_name: "{{ current_cr_spec.authentication_secret_name }}"
+  when: current_cr_spec.authentication_secret_name
 
 - name: debug auth secret name
   debug:
@@ -113,8 +80,8 @@
 
 - name: Set the authentication method
   set_fact:
-    authentication: "{{ cost_mgmt_setup.resources[0].spec.authentication }}"
-  when: cost_mgmt_setup.resources
+    authentication: "{{ current_cr_spec.authentication }}"
+  when: current_cr_spec.authentication
   ignore_errors: true
 
 - name: debug auth method
@@ -124,8 +91,8 @@
 
 - name: Set the ingress URL
   set_fact:
-    ingress_url: "{{ cost_mgmt_setup.resources[0].spec.ingress_url }}"
-  when: cost_mgmt_setup.resources
+    ingress_url: "{{ current_cr_spec.ingress_url }}"
+  when: current_cr_spec.ingress_url
   ignore_errors: true
 
 - name: debug ingress URL
@@ -191,11 +158,6 @@
   stat:
     path: "{{ cacert_path }}"
   register: trusted_cert
-
-- name: debug the trusted cert
-  debug:
-    var: trusted_cert
-  when: debug
 
 - name: Fail if the trusted cert does not exist
   fail:
@@ -365,3 +327,8 @@
   with_items:
     - '{{ packaged_reports.stdout_lines }}'
   when: collect_delete_after | bool
+
+- include_tasks: update-status.yml
+  vars:
+    status_vars:
+      upload_attempt_time: "{{ ansible_date_time.iso8601 }}"

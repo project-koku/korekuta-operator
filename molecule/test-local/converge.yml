@@ -201,21 +201,7 @@
           ignore_errors: yes
           failed_when: false
           command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c operator
-          environment:
-            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
-          vars:
-            definition: "{{ lookup('template',
-              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
-          register: log
-
-        - debug: var=log.stdout_lines
-
-        - name: get ansible logs
-          ignore_errors: yes
-          failed_when: false
-          command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c ansible
+            deployment/{{ definition.metadata.name }} -n {{ namespace }}
           environment:
             KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
           vars:
@@ -396,7 +382,7 @@
           ignore_errors: yes
           failed_when: false
           command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c operator
+            deployment/{{ definition.metadata.name }} -n {{ namespace }}
           environment:
             KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
           vars:
@@ -405,23 +391,6 @@
           register: log
 
         - debug: var=log.stdout_lines
-
-        - name: get ansible logs
-          ignore_errors: yes
-          failed_when: false
-          command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c ansible
-          environment:
-            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
-          vars:
-            definition: "{{ lookup('template',
-              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
-          register: log
-
-        - debug: var=log.stdout_lines
-
-        - fail:
-            msg: "Failed on action: converge"
 
 - name: Start server on Operator container
   hosts: k8s
@@ -574,23 +543,6 @@
           register: log
 
         - debug: var=log.stdout_lines
-
-        - name: get ansible logs
-          ignore_errors: yes
-          failed_when: false
-          command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c  ansible
-          environment:
-            KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
-          vars:
-            definition: "{{ lookup('template',
-              '/'.join([deploy_dir, 'operator.yaml'])) | from_yaml }}"
-          register: log
-
-        - debug: var=log.stdout_lines
-
-        - fail:
-            msg: "Failed on action: converge"
 
 - name: Copy tar.gz to k8s from Operator
   hosts: k8s
