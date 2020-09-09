@@ -50,12 +50,7 @@
   set_fact:
     cost_mgmt_data_cr_exists: "{{ cost_mgmt_data_cr.resources | bool }}"
 
-# - name: Set cost_mgmt_data_cr_exists
-#   set_fact:
-#     cost_mgmt_data_cr_exists: false
-#   when: not cost_mgmt_data_cr.resources
-
-- name: The current month reports are created for
+- name: Update CostManagement CR status
   operator_sdk.util.k8s_status:
     api_version: cost-mgmt.openshift.io/v1alpha1
     kind: CostManagement
