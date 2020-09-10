@@ -4,10 +4,4 @@
   group: cost-mgmt.openshift.io
   kind: CostManagement
   role: /opt/ansible/roles/setup
-
-# collect the reports
-- version: v1alpha1
-  group: cost-mgmt-data.openshift.io
-  kind: CostManagementData
-  role: /opt/ansible/roles/collect
-  reconcilePeriod: 360m
+  reconcilePeriod: 5m

@@ -9,3 +9,6 @@ testing/
 
 # vscode settings
 .vscode/
+
+# pyenv ignore
+.python-version

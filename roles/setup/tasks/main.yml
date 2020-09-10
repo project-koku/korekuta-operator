@@ -1,45 +1,135 @@
 ---
+
+- name: print hostvars[localhost]._cost_mgmt_openshift_io_costmanagement
+  debug:
+    var: hostvars["localhost"]._cost_mgmt_openshift_io_costmanagement
+  when:
+    - hostvars is defined
+    - hostvars["localhost"] is defined
+    - hostvars["localhost"]._cost_mgmt_openshift_io_costmanagement is defined
+  ignore_errors: true
+
+- name: print _cost_mgmt_openshift_io_costmanagement_spec
+  debug:
+    var: _cost_mgmt_openshift_io_costmanagement_spec
+  when:
+    - _cost_mgmt_openshift_io_costmanagement_spec is defined
+  ignore_errors: true
+
+- name: Set current cr facts
+  set_fact:
+    current_cr: "{{ hostvars['localhost']._cost_mgmt_openshift_io_costmanagement }}"
+    current_cr_spec: "{{ _cost_mgmt_openshift_io_costmanagement_spec }}"
+  when:
+    - hostvars is defined
+    - hostvars["localhost"] is defined
+    - hostvars["localhost"]._cost_mgmt_openshift_io_costmanagement is defined
+    - _cost_mgmt_openshift_io_costmanagement_spec is defined
+  ignore_errors: true
+
+- name: print meta
+  debug:
+    var: meta
+
+- name: Get upload_attempt_time
+  set_fact:
+    last_upload_attempt_time: "{{ current_cr.status.upload_attempt_time }}"
+    current_time: "{{ ansible_date_time.iso8601 }}"
+  when:
+    - current_cr is defined
+    - current_cr.status is defined
+    - current_cr.status.upload_attempt_time is defined
+  ignore_errors: true
+
+- name: print last_upload_attempt_time
+  debug:
+    var: last_upload_attempt_time
+  when: last_upload_attempt_time is defined
+  ignore_errors: true
+
+- name: iso8601 to timestamp
+  set_fact:
+    last_upload_attempt_timestamp: "{{ last_upload_attempt_time | regex_replace('[T, Z]+', ' ') | trim }}"
+    current_timestamp: "{{ current_time | regex_replace('[T, Z]+', ' ') | trim }}"
+  when: last_upload_attempt_time is defined
+  ignore_errors: true
+
+- name: print last_upload_attempt_timestamp
+  debug:
+    var: last_upload_attempt_timestamp
+  when: last_upload_attempt_timestamp is defined
+
+- name: timestamp to datetime
+  set_fact:
+    last_upload_attempt_datetime: "{{ last_upload_attempt_timestamp | to_datetime }}"
+    current_datetime: "{{ current_timestamp | to_datetime }}"
+    upload_time_diff: "{{ ((current_timestamp | to_datetime) - (last_upload_attempt_timestamp | to_datetime)).total_seconds() }}"
+  when: last_upload_attempt_timestamp is defined
+  ignore_errors: true
+
+- name: print last_upload_attempt_datetime
+  debug:
+    var: last_upload_attempt_datetime
+  when: last_upload_attempt_datetime is defined
+
+- name: print upload_time_diff
+  debug:
+    var: upload_time_diff
+  when: upload_time_diff is defined
+
+- name: Set collect_data
+  set_fact:
+    collect_data: true
+  when: upload_time_diff is not defined or (( upload_time_diff | int ) > upload_cycle_seconds)
+
+- name: print collect_data
+  debug:
+    var: collect_data
+  when: collect_data is defined
+
 - name: Search for metering resources
   community.kubernetes.k8s_info:
     api_version: v1
     kind: MeteringConfig
-    namespace: "{{ namespace }}"
+    namespace: "{{ meta.namespace }}"
   register: metering_objects
 
 - name: Ensure metering has been configured
   fail:
     msg: 'Metering has not been configured.'
-  when: not metering_objects.resources
+  when: not metering_objects.resources or (metering_objects.resources is defined and metering_objects.resources | length == 0)
 
-- name: Obtain cost-mgmt-setup info
-  community.kubernetes.k8s_info:
-    api_version: cost-mgmt.openshift.io/v1alpha1
-    kind: CostManagement
-    namespace: "{{ namespace }}"
-    name: cost-mgmt-setup
-  register: cost_mgmt_setup
+- name: Set upload_cycle_seconds
+  set_fact:
+    upload_cycle_seconds: "{{ current_cr_spec.upload_cycle_seconds | int }}"
+  when:
+    - current_cr_spec is defined
+    - current_cr_spec.upload_cycle_seconds is defined
 
 - name: Set current_day
   set_fact:
-    current_day: "{{ cost_mgmt_setup.resources[0].spec.current_day | int }}"
-  when: cost_mgmt_setup.resources
-  ignore_errors: true
+    current_day: "{{ current_cr_spec.current_day | int }}"
+  when:
+    - current_cr_spec is defined
+    - current_cr_spec.current_day is defined
 
 - name: Set current_month
   set_fact:
-    current_month: "{{ cost_mgmt_setup.resources[0].spec.current_month | int }}"
-  when: cost_mgmt_setup.resources
-  ignore_errors: true
+    current_month: "{{ current_cr_spec.current_month | int }}"
+  when:
+    - current_cr_spec is defined
+    - current_cr_spec.current_month is defined
 
 - name: Set current_year
   set_fact:
-    current_year: "{{ cost_mgmt_setup.resources[0].spec.current_year | int }}"
-  when: cost_mgmt_setup.resources
-  ignore_errors: true
+    current_year: "{{ current_cr_spec.current_year | int }}"
+  when:
+    - current_cr_spec is defined
+    - current_cr_spec.current_year is defined
 
 - name: Create datasources and reportqueries
   community.kubernetes.k8s:
-    namespace: "{{ namespace }}"
+    namespace: "{{ meta.namespace }}"
     state: present
     src: "{{ item }}"
   with_fileglob:
@@ -51,6 +141,7 @@
     input_month: '{{ current_month }}'
     input_year: '{{ current_year }}'
     month_delta: 0
+    namespace: "{{ meta.namespace }}"
     state: 'present'
 
 - name: Manage next month reports
@@ -59,6 +150,7 @@
     input_month: '{{ current_month }}'
     input_year: '{{ current_year }}'
     month_delta: 1
+    namespace: "{{ meta.namespace }}"
     state: 'present'
   when: (current_day | int)  > 24
 
@@ -68,5 +160,17 @@
     input_month: '{{ current_month }}'
     input_year: '{{ current_year }}'
     month_delta: -1
+    namespace: "{{ meta.namespace }}"
     state: 'absent'
   when: (current_day | int)  < 3
+
+- name: Upload metric data
+  import_tasks: collect.yml
+  vars:
+    input_month: '{{ current_month }}'
+    input_year: '{{ current_year }}'
+    namespace: "{{ meta.namespace }}"
+    current_cr: "{{ current_cr }}"
+    current_cr_spec: "{{ current_cr_spec }}"
+  when:
+    - collect_data | bool

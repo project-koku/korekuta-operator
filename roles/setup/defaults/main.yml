@@ -1,8 +1,32 @@
 ---
-namespace: openshift-metering
 current_day: '{{ ansible_date_time.day | int }}'
 current_month: '{{ ansible_date_time.month | int }}'
 current_year: '{{ ansible_date_time.year | int }}'
 setup_template_path: '/tmp/cost-mgmt-operator-collect'
 setup_template_dir: "{{ lookup('password', '/dev/null chars=ascii_letters') }}"
 setup_delete_after: 'true'
+upload_cycle_seconds: 21600
+collect_data: 'false'
+collect_format: 'csv'
+collect_manifest_uuid: '{{ 99999999999999999999 | random | to_uuid }}'
+collect_archive_name: cost-mgmt
+ocp_validate_cert: 'true'
+ocp_cluster_id: ''
+reporting_operator_token_name: ''
+collect_reports:
+  - 'cm-openshift-usage-lookback-'
+  - 'cm-openshift-persistentvolumeclaim-lookback-'
+  - 'cm-openshift-node-labels-lookback-'
+collect_download_path: '/tmp/cost-mgmt-operator-collect'
+collect_delete_after: 'true'
+collect_ocp_report_timeout: 60
+collect_max_csvfile_size: 99
+api_prefix: 'https://'
+ingress_url: 'https://cloud.redhat.com/api/ingress/v1/upload'
+authentication: 'token'
+authentication_token: ''
+username: ''
+password: ''
+cacert_path: '{{ collect_download_path }}/ca-bundle.crt'
+debug: 'true'
+collect_upload_wait: '{{ 2100 | random(step=10) }}'
