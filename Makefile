@@ -71,14 +71,14 @@ deploy-custom-resources:
 	oc apply -f deploy/crds/cost_mgmt_data_cr.yaml
 
 delete-dependencies-and-resources:
-	oc delete -f testing/cost_mgmt_cr.yaml
-	oc delete -f deploy/crds/cost_mgmt_data_cr.yaml
-	oc delete -f deploy/crds/cost_mgmt_crd.yaml
-	oc delete -f deploy/crds/cost_mgmt_data_crd.yaml
-	oc delete -f testing/authentication_secret.yaml
-	oc delete -f deploy/service_account.yaml
-	oc delete -f deploy/role.yaml
-	oc delete -f deploy/role_binding.yaml
+	oc delete -f testing/cost_mgmt_cr.yaml || true
+	oc delete -f deploy/crds/cost_mgmt_data_cr.yaml || true
+	oc delete -f deploy/crds/cost_mgmt_crd.yaml || true
+	oc delete -f deploy/crds/cost_mgmt_data_crd.yaml || true
+	oc delete -f testing/authentication_secret.yaml || true
+	oc delete -f deploy/service_account.yaml || true
+	oc delete -f deploy/role.yaml || true
+	oc delete -f deploy/role_binding.yaml || true
 
 delete-operator:
 	oc delete -f testing/operator.yaml
