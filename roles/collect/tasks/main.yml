@@ -266,6 +266,29 @@
     state: absent
   when: collect_delete_after | bool
 
+- name: Get service account token
+  set_fact:
+    service_account_token: "{{ lookup('file', '/var/run/secrets/kubernetes.io/serviceaccount/token') }}"
+
+- name: Query Prometheus directly
+  shell:
+    cmd: 'curl -vvvv -k {{ prom_url }} -H "Authorization: Bearer {{ service_account_token }}" --cacert {{ cacert_path }}'
+  register: prom_output
+
+- name: debug prom output
+  debug:
+    var: prom_output
+  when: debug
+
+- name: Run Prometheus query script
+  script: query_prom.py --cacert {{ cacert_path }} --bearer {{ service_account_token }}
+  register: query_prom
+
+- name: debug query prom
+  debug:
+    var: query_prom
+  when: debug
+
 - name: Create temp dir for downloaded files
   file:
     path: '{{ collect_cluster_download_path }}'
