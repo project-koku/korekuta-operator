@@ -43,7 +43,7 @@
         src: 'mock_ingress_server.py'
         mode: 0666
 
-- name: Converge on setup
+- name: Prepare converge on setup
   hosts: localhost
   connection: local
   vars:
@@ -56,10 +56,6 @@
       'crds/cost_mgmt_cr.yaml'])) | from_yaml }}"
     cm_crd: "{{ lookup('file', '/'.join([deploy_dir,
       'crds/cost_mgmt_crd.yaml'])) | from_yaml }}"
-    cm_data_crd: "{{ lookup('file', '/'.join([deploy_dir,
-      'crds/cost_mgmt_data_crd.yaml'])) | from_yaml }}"
-    cm_data_cr: "{{ lookup('file', '/'.join([molecule_dir,
-      'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
     metering_cr: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/metering_cr.yaml'])) | from_yaml }}"
     metering_crd: "{{ lookup('file', '/'.join([molecule_dir,
@@ -78,6 +74,9 @@
       'crds/reporting_operator_token.yaml'])) | from_yaml }}"
     trusted_ca_config: "{{ lookup('file', '/'.join([molecule_dir,
       'crds/trusted_ca_certmap.yaml'])) | from_yaml }}"
+    authentication_secret: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/authentication_secret.yaml'])) | from_yaml }}"
+
   tasks:
     - block:
         - name: Delete the Operator Deployment
@@ -131,12 +130,6 @@
             namespace: '{{ namespace }}'
             definition: '{{ cm_crd }}'
 
-        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData crd
-          k8s:
-            state: present
-            namespace: '{{ namespace }}'
-            definition: '{{ cm_data_crd }}'
-
         - name: Create the trusted cert ConfigMap
           k8s:
             state: present
@@ -168,8 +161,8 @@
               (cr | json_query('resources[].status.conditions[].reason'))"
             - "'Metering has not been configured.' in
               (cr | json_query('resources[].status.conditions[].message'))"
-          delay: 12
-          retries: 15
+          delay: 10
+          retries: 12
 
       rescue:
         - name: debug cr
@@ -254,6 +247,12 @@
           command: docker ps -aqf "ancestor=cost-mgmt.openshift.io/cost-mgmt-operator:testing"
           register: container_id
 
+        - name: Create the authentication Secret
+          k8s:
+            state: present
+            namespace: '{{ namespace }}'
+            definition: '{{ authentication_secret }}'
+
         - name: Create the metering namespace
           k8s:
             api_version: v1
@@ -321,62 +320,7 @@
           debug:
             var: reporting_token
 
-        - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement crd
-          k8s:
-            state: present
-            namespace: '{{ namespace }}'
-            definition: '{{ cm_crd }}'
-
-        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData crd
-          k8s:
-            state: present
-            namespace: '{{ namespace }}'
-            definition: '{{ cm_data_crd }}'
-
-        - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement
-          k8s:
-            state: present
-            namespace: '{{ namespace }}'
-            definition: '{{ cm_cr }}'
-
-        - name: Wait 2m for reconciliation to complete for setup
-          k8s_info:
-            api_version: '{{ cm_cr.apiVersion }}'
-            kind: '{{ cm_cr.kind }}'
-            namespace: '{{ namespace }}'
-            name: '{{ cm_cr.metadata.name }}'
-          register: cr
-          until:
-            - "'Successful' in (cr |
-              json_query('resources[].status.conditions[].reason'))"
-          delay: 12
-          retries: 10
-
       rescue:
-        - name: debug cr
-          ignore_errors: yes
-          failed_when: false
-          debug:
-            var: debug_cr
-          vars:
-            debug_cr: '{{ lookup("k8s",
-              kind=cm_data_cr.kind,
-              api_version=cm_data_cr.apiVersion,
-              namespace=namespace,
-              resource_name=cm_data_cr.metadata.name
-            )}}'
-
-        - name: debug cost-mgmt lookup
-          ignore_errors: yes
-          failed_when: false
-          debug:
-            var: deploy
-          vars:
-            deploy: '{{ lookup("k8s",
-              kind="Deployment",
-              api_version="apps/v1",
-              namespace=namespace
-            )}}'
 
         - name: get operator logs
           ignore_errors: yes
@@ -452,57 +396,44 @@
     - name: start server
       command: docker exec -i "{{ containerName }}" bash -c 'cd /tmp/www; nohup python3 mock_ingress_server.py </dev/null >/dev/null 2>&1 &'
 
-- name: Converge for collect
+- name: Converge for setup
   hosts: localhost
   connection: local
   vars:
     ansible_python_interpreter: '{{ ansible_playbook_python }}'
     deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
     molecule_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule"
-    cm_data_cr: "{{ lookup('file', '/'.join([deploy_dir,
-      'crds/cost_mgmt_data_cr.yaml'])) | from_yaml }}"
-    authentication_secret: "{{ lookup('file', '/'.join([molecule_dir,
-      'crds/authentication_secret.yaml'])) | from_yaml }}"
     REPLACE_IMAGE: cost-mgmt.openshift.io/cost-mgmt-operator:testing
+    cm_cr: "{{ lookup('file', '/'.join([molecule_dir,
+      'crds/cost_mgmt_cr.yaml'])) | from_yaml }}"
+    cm_crd: "{{ lookup('file', '/'.join([deploy_dir,
+      'crds/cost_mgmt_crd.yaml'])) | from_yaml }}"
   tasks:
     - block:
-        - name: Create the authentication Secret
-          k8s:
-            state: present
-            namespace: '{{ namespace }}'
-            definition: '{{ authentication_secret }}'
+      - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement crd
+        k8s:
+          state: present
+          namespace: '{{ namespace }}'
+          definition: '{{ cm_crd }}'
 
-        - name: Create the cost-mgmt-data.openshift.io/v1alpha1.CostManagementData
-          k8s:
-            state: present
-            namespace: '{{ namespace }}'
-            definition: '{{ cm_data_cr }}'
+      - name: Create the cost-mgmt.openshift.io/v1alpha1.CostManagement
+        k8s:
+          state: present
+          namespace: '{{ namespace }}'
+          definition: '{{ cm_cr }}'
 
-        - name: debug cost-mgmt data custom resource
-          ignore_errors: yes
-          failed_when: false
-          debug:
-            var: debug_cr
-          vars:
-            debug_cr: '{{ lookup("k8s",
-              kind=cm_data_cr.kind,
-              api_version=cm_data_cr.apiVersion,
-              namespace=namespace,
-              resource_name=cm_data_cr.metadata.name
-            )}}'
-
-        - name: Wait 2m for reconciliation to complete for collect
-          k8s_info:
-            api_version: '{{ cm_data_cr.apiVersion }}'
-            kind: '{{ cm_data_cr.kind }}'
-            namespace: '{{ namespace }}'
-            name: '{{ cm_data_cr.metadata.name }}'
-          register: cm_data_cr
-          until:
-            - "'Successful' in (cm_data_cr |
-              json_query('resources[].status.conditions[].reason'))"
-          delay: 12
-          retries: 10
+      - name: Wait 5m for reconciliation to complete for setup
+        k8s_info:
+          api_version: '{{ cm_cr.apiVersion }}'
+          kind: '{{ cm_cr.kind }}'
+          namespace: '{{ namespace }}'
+          name: '{{ cm_cr.metadata.name }}'
+        register: cr
+        until:
+          - "'Successful' in (cr |
+            json_query('resources[].status.conditions[].reason'))"
+        delay: 20
+        retries: 15
 
       rescue:
         - name: debug cr
@@ -512,10 +443,10 @@
             var: debug_cr
           vars:
             debug_cr: '{{ lookup("k8s",
-              kind=cm_data_cr.kind,
-              api_version=cm_data_cr.apiVersion,
+              kind=cm_cr.kind,
+              api_version=cm_cr.apiVersion,
               namespace=namespace,
-              resource_name=cm_data_cr.metadata.name
+              resource_name=cm_cr.metadata.name
             )}}'
 
         - name: debug cost-mgmt lookup
@@ -534,7 +465,7 @@
           ignore_errors: yes
           failed_when: false
           command: kubectl logs
-            deployment/{{ definition.metadata.name }} -n {{ namespace }} -c  operator
+            deployment/{{ definition.metadata.name }} -n {{ namespace }}
           environment:
             KUBECONFIG: '{{ lookup("env", "KUBECONFIG") }}'
           vars:

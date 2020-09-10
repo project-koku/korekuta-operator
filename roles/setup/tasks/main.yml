@@ -97,7 +97,7 @@
 - name: Ensure metering has been configured
   fail:
     msg: 'Metering has not been configured.'
-  when: not metering_objects.resources
+  when: not metering_objects.resources or (metering_objects.resources is defined and metering_objects.resources | length == 0)
 
 - name: Set upload_cycle_seconds
   set_fact:
@@ -167,8 +167,8 @@
 - name: Upload metric data
   import_tasks: collect.yml
   vars:
-    current_month: '{{ current_month }}'
-    current_year: '{{ current_year }}'
+    input_month: '{{ current_month }}'
+    input_year: '{{ current_year }}'
     namespace: "{{ meta.namespace }}"
     current_cr: "{{ current_cr }}"
     current_cr_spec: "{{ current_cr_spec }}"

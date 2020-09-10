@@ -40,13 +40,13 @@
 
 - name: Format current_month string if less than 10
   set_fact:
-    current_month: '{{ "0" + (current_month | string) }}'
+    current_month: '{{ "0" + (input_month | string) }}'
   when:
-    - (current_month | int)  < 10
+    - (input_month | int)  < 10
 
 - name: Set monthly suffix for reports
   set_fact:
-    current_year_month: '{{ (current_year | string )  + (current_month | string) }}'
+    current_year_month: '{{ (input_year | string )  + (input_month | string) }}'
 
 - name: Obtain metering api info
   community.kubernetes.k8s_info:
@@ -177,7 +177,7 @@
   community.kubernetes.k8s:
     namespace: "{{ namespace }}"
     state: present
-    src: '{{ ansible_env.HOME }}/roles/collect/files/trusted_ca_certmap.yaml'
+    src: '{{ ansible_env.HOME }}/roles/setup/files/trusted_ca_certmap.yaml'
 
 - name: Get the trusted-ca-bundle
   community.kubernetes.k8s_info:
