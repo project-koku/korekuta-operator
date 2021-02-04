@@ -99,8 +99,7 @@ spec:
   description: |-
 
     ## Introduction
-    The `cost-mgmt-operator` is deprecated. The `koku-metrics-operator` should be used instead. For information on installing the `koku-metrics-operator`, read the [documentation](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html/getting_started_with_cost_management/assembly_koku_cost_management_installing).
-    The `cost-mgmt-operator` is an OpenShift Operator used to obtain OpenShift usage data and upload it to [cost managment](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.3/html-single/getting_started_with_cost_management/index). The Operator utilizes [Ansible](https://www.ansible.com/) and [operator-metering](https://github.com/operator-framework/operator-metering) to create, collect, package, and upload usage report metrics to cost management. For more information, reach out to cost-mgmt@redhat.com.
+    The cost-mgmt-operator is a component of the cost management service for OpenShift 4, that has been deprecated and substituted with a new version. It is only recommended for OpenShift 4.4. and before. Users of OCP 4.5+ should install the new Koku Metrics Operator (community) or the Cost Management Metrics Operator (supported version to be released soon). This operator is used to obtain OpenShift usage data and upload it to cost management. The Operator utilizes Ansible and operator-metering to create, collect, package, and upload usage report metrics to cost management. For more information, reach out to costmanagement@redhat.com
 
     ## Features and Capabilities
 
