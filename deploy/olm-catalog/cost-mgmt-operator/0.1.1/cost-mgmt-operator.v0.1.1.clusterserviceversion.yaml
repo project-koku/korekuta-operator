@@ -33,12 +33,12 @@ metadata:
     capabilities: Seamless Upgrades
     categories: "Monitoring"
     certified: 'false'
-    containerImage: quay.io/repository/project-koku/cost-mgmt-operator:v0.0.3
-    createdAt: 2020-03-26T2:38:59Z
+    containerImage: quay.io/repository/project-koku/cost-mgmt-operator:v0.1.1
+    createdAt: 2020-09-10T21:53:00Z
     support: Cost Managment
     repository: https://github.com/project-koku/korekuta-operator
     description: The cost-mgmt-operator is deprecated. The koku-metrics-operator should be used instead.
-  name: cost-mgmt-operator.v0.0.3
+  name: cost-mgmt-operator.v0.1.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -99,8 +99,7 @@ spec:
   description: |-
 
     ## Introduction
-
-    The `cost-mgmt-operator` is deprecated. The `koku-metrics-operator` should be used instead. For information on installing the `koku-metrics-operator`, read the [documentation](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html/getting_started_with_cost_management/assembly_koku_cost_management_installing). 
+    The `cost-mgmt-operator` is deprecated. The `koku-metrics-operator` should be used instead. For information on installing the `koku-metrics-operator`, read the [documentation](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html/getting_started_with_cost_management/assembly_koku_cost_management_installing).
     The `cost-mgmt-operator` is an OpenShift Operator used to obtain OpenShift usage data and upload it to [cost managment](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.3/html-single/getting_started_with_cost_management/index). The Operator utilizes [Ansible](https://www.ansible.com/) and [operator-metering](https://github.com/operator-framework/operator-metering) to create, collect, package, and upload usage report metrics to cost management. For more information, reach out to cost-mgmt@redhat.com.
 
     ## Features and Capabilities
@@ -255,54 +254,53 @@ spec:
           selector:
             matchLabels:
               name: cost-mgmt-operator
-          strategy: {}
           template:
             metadata:
               labels:
                 name: cost-mgmt-operator
             spec:
-              containers:
-              - command:
-                - /usr/local/bin/ao-logs
-                - /tmp/ansible-operator/runner
-                - stdout
-                image: quay.io/project-koku/cost-mgmt-operator:v0.0.3
-                imagePullPolicy: Always
-                name: ansible
-                resources: {}
-                volumeMounts:
-                - mountPath: /tmp/ansible-operator/runner
-                  name: runner
-                  readOnly: true
-                - mountPath: /tmp/cost-mgmt-operator-collect
-                  name: cost-mgmt-operator
-              - env:
-                - name: WATCH_NAMESPACE
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.annotations['olm.targetNamespaces']
-                - name: POD_NAME
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.name
-                - name: OPERATOR_NAME
-                  value: cost-mgmt-operator
-                - name: ANSIBLE_GATHERING
-                  value: explicit
-                image: quay.io/project-koku/cost-mgmt-operator:v0.0.3
-                imagePullPolicy: Always
-                name: operator
-                resources: {}
-                volumeMounts:
-                - mountPath: /tmp/ansible-operator/runner
-                  name: runner
-                - mountPath: /tmp/cost-mgmt-operator-collect
-                  name: cost-mgmt-operator
               serviceAccountName: cost-mgmt-operator
+              containers:
+                - name: operator
+                  # Replace this with the built image name
+                  image: quay.io/project-koku/cost-mgmt-operator:v0.1.1
+                  imagePullPolicy: Always
+                  volumeMounts:
+                    - mountPath: /tmp/ansible-operator/runner
+                      name: runner
+                    - mountPath: /tmp/cost-mgmt-operator-collect
+                      name: cost-mgmt-operator
+                  env:
+                    - name: WATCH_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                          fieldPath: metadata.namespace
+                    - name: POD_NAME
+                      valueFrom:
+                        fieldRef:
+                          fieldPath: metadata.name
+                    - name: OPERATOR_NAME
+                      value: "cost-mgmt-operator"
+                    - name: ANSIBLE_GATHERING
+                      value: explicit
+              ports:
+                - name: http-metrics
+                  containerPort: 8383
+                - name: cr-metrics
+                  containerPort: 8686
               volumes:
-              - emptyDir: {}
-                name: runner
-              - name: cost-mgmt-operator
+                - name: runner
+                  emptyDir: {}
+                - name: cost-mgmt-operator
+          volumeClaimTemplates:
+            - metadata:
+                name: cost-mgmt-operator
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
       permissions:
       - rules:
         - apiGroups:
@@ -438,9 +436,9 @@ spec:
   minKubeVersion: 1.14.6
   provider:
     name: Red Hat
-  version: 0.0.3
+  version: 0.1.1
   links:
   - name: GitHub Repository
     url: https://github.com/project-koku/korekuta-operator
   keywords: ['cost', 'management', 'usage', 'monitor']
-  replaces: cost-mgmt-operator.v0.0.2
+  replaces: cost-mgmt-operator.v0.1.0
